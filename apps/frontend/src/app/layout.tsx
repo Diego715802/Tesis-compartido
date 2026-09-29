@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
+import { Roboto } from "next/font/google";
 import { AppThemeProvider } from "@/components/providers/app-theme-provider";
 import "./globals.css";
+
+const roboto = Roboto({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-roboto",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -17,8 +25,8 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es" data-scroll-behavior="smooth">
-      <body>
+    <html lang="es" data-scroll-behavior="smooth" className={roboto.variable}>
+      <body className={roboto.className}>
         <AppThemeProvider>{children}</AppThemeProvider>
       </body>
     </html>

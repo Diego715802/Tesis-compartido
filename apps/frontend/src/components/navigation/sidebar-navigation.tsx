@@ -1,8 +1,14 @@
 "use client";
 
-import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
+import EditNoteRoundedIcon from "@mui/icons-material/EditNoteRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
+import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
+import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
+import PointOfSaleOutlinedIcon from "@mui/icons-material/PointOfSaleOutlined";
+import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Box from "@mui/material/Box";
@@ -12,275 +18,172 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { Brand } from "@/components/brand/brand";
 import { modules } from "@/config/modules";
+import { useEffect, useState } from "react";
 
-export const SIDEBAR_EXPANDED_WIDTH = 244;
-export const SIDEBAR_COLLAPSED_WIDTH = 76;
+export const SIDEBAR_COLLAPSED_WIDTH = 75;
+export const SIDEBAR_EXPANDED_WIDTH = 238;
 
 type SidebarNavigationProps = {
   collapsed: boolean;
   mobileOpen: boolean;
-  transitionsEnabled: boolean;
   onCloseMobile: () => void;
-  onToggleCollapsed: () => void;
 };
 
-type NavigationContentProps = {
-  collapsed: boolean;
-  mobile?: boolean;
-  onCloseMobile?: () => void;
-  onToggleCollapsed?: () => void;
-};
+const billingItems = [
+  { hash: "borradores", label: "Borradores", icon: EditNoteRoundedIcon },
+  { hash: "emitidas", label: "Emitidas", icon: ReceiptLongOutlinedIcon },
+  { hash: "notas", label: "Notas de crédito", icon: ArticleOutlinedIcon },
+  { hash: "pagos", label: "Pagos", icon: AttachMoneyRoundedIcon },
+  { hash: "promesas", label: "Promesas de pago", icon: PaidOutlinedIcon },
+  { hash: "comprobantes", label: "Comprobantes de Pago", icon: PictureAsPdfOutlinedIcon },
+  { hash: "arqueos", label: "Arqueos de caja", icon: PointOfSaleOutlinedIcon },
+] as const;
 
 function NavigationContent({
-  collapsed,
+  collapsed = false,
   mobile = false,
   onCloseMobile,
-  onToggleCollapsed,
-}: NavigationContentProps) {
+}: {
+  collapsed?: boolean;
+  mobile?: boolean;
+  onCloseMobile?: () => void;
+}) {
   const pathname = usePathname();
+  const showLabels = mobile || !collapsed;
+  const [billingOpen, setBillingOpen] = useState(pathname === "/facturacion" || pathname.startsWith("/facturacion/"));
+  const [billingHash, setBillingHash] = useState("borradores");
+
+  useEffect(() => {
+    const syncHash = () => setBillingHash(window.location.hash.replace("#", "") || "borradores");
+    const frame = window.requestAnimationFrame(() => {
+      if (pathname === "/facturacion" || pathname.startsWith("/facturacion/")) setBillingOpen(true);
+      syncHash();
+    });
+    window.addEventListener("hashchange", syncHash);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("hashchange", syncHash);
+    };
+  }, [pathname]);
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        height: "100%",
-        minHeight: 0,
-        flexDirection: "column",
-        backgroundColor: "#FFFFFF",
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          minHeight: 72,
-          alignItems: "center",
-          justifyContent: collapsed ? "center" : "space-between",
-          px: collapsed ? 1.25 : 2,
-          borderBottom: "1px solid",
-          borderColor: "divider",
-        }}
-      >
-        {!collapsed && (
+    <Box sx={{ display: "flex", height: "100%", minHeight: 0, flexDirection: "column", backgroundColor: "#FDFDFD" }}>
+      {mobile && (
+        <Box sx={{ display: "flex", minHeight: 54, alignItems: "center", justifyContent: "space-between", px: 1.5, borderBottom: "1px solid #E7EAEC" }}>
           <Brand compact />
-        )}
+          <IconButton aria-label="Cerrar navegación" onClick={onCloseMobile} size="small">
+            <CloseRoundedIcon />
+          </IconButton>
+        </Box>
+      )}
 
-        {mobile ? (
-          <Tooltip title="Cerrar navegación">
-            <IconButton
-              aria-label="Cerrar navegación de módulos"
-              onClick={onCloseMobile}
-              sx={{
-                width: 36,
-                height: 36,
-                borderRadius: "10px",
-                color: "text.secondary",
-                "&:hover": { color: "primary.main", backgroundColor: "#EEF5FC" },
-              }}
-            >
-              <CloseRoundedIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-          </Tooltip>
-        ) : (
-          <Tooltip title={collapsed ? "Expandir navegación" : "Colapsar navegación"}>
-            <IconButton
-              aria-label={collapsed ? "Expandir navegación" : "Colapsar navegación"}
-              aria-expanded={!collapsed}
-              onClick={onToggleCollapsed}
-              sx={{
-                width: 36,
-                height: 36,
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: "10px",
-                color: "text.secondary",
-                backgroundColor: "#FFFFFF",
-                "&:hover": {
-                  color: "primary.main",
-                  backgroundColor: "#EEF5FC",
-                  borderColor: "#C9DDF1",
-                },
-              }}
-            >
-              {collapsed ? (
-                <ChevronRightRoundedIcon sx={{ fontSize: 20 }} />
-              ) : (
-                <ChevronLeftRoundedIcon sx={{ fontSize: 20 }} />
-              )}
-            </IconButton>
-          </Tooltip>
-        )}
-      </Box>
+      {!mobile && (
+        <Box sx={{ minHeight: 48, px: showLabels ? 2 : 1, pt: 2, pb: 1, overflow: "hidden", borderBottom: "1px solid #E7EAEC", transition: "padding 220ms cubic-bezier(0.16, 1, 0.3, 1)" }}>
+          <Typography aria-hidden={!showLabels} sx={{ width: showLabels ? "auto" : 0, opacity: showLabels ? 1 : 0, transform: showLabels ? "translateX(0)" : "translateX(-10px)", color: "#8A8C8E", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", whiteSpace: "nowrap", transition: "opacity 150ms ease, transform 220ms cubic-bezier(0.16, 1, 0.3, 1)" }}>
+            Módulos
+          </Typography>
+        </Box>
+      )}
 
       <Box
         component="nav"
         aria-label="Módulos del ERP"
-        sx={{
-          display: "flex",
-          minHeight: 0,
-          flex: 1,
-          flexDirection: "column",
-          gap: 0.65,
-          overflowY: "auto",
-          px: collapsed ? 1 : 1.25,
-          py: 1.75,
-          scrollbarWidth: "none",
-          "&::-webkit-scrollbar": { display: "none" },
-        }}
+        sx={{ display: "flex", minHeight: 0, flex: 1, flexDirection: "column", overflowY: "auto", overflowX: "hidden", py: mobile ? 1 : 0.75, scrollbarWidth: "none", "&::-webkit-scrollbar": { display: "none" } }}
       >
         {modules.map((module) => {
-          const isActive = pathname === module.href;
+          const isActive = pathname === module.href || (module.slug === "facturacion" && pathname.startsWith("/facturacion/"));
           const Icon = module.icon;
 
           return (
-            <Tooltip
-              key={module.slug}
-              title={collapsed ? module.label : ""}
-              placement="right"
-              enterDelay={300}
-            >
-              <Box
+            <Box key={module.slug}>
+              <Tooltip title={showLabels ? "" : module.label} placement="right" enterDelay={250}>
+                <Box
                 component={Link}
                 href={module.href}
                 aria-current={isActive ? "page" : undefined}
-                aria-label={collapsed ? module.label : undefined}
-                onClick={mobile ? onCloseMobile : undefined}
+                onClick={(event) => {
+                  if (module.slug === "facturacion" && pathname.startsWith("/facturacion")) {
+                    event.preventDefault();
+                    setBillingOpen((open) => !open);
+                    return;
+                  }
+                  if (mobile) onCloseMobile?.();
+                }}
                 sx={{
                   position: "relative",
                   display: "flex",
-                  minHeight: 50,
+                  minHeight: mobile ? 48 : 46,
                   alignItems: "center",
-                  justifyContent: collapsed ? "center" : "flex-start",
-                  gap: collapsed ? 0 : 1.25,
-                  px: collapsed ? 0.75 : 1,
-                  color: isActive ? "primary.dark" : "text.secondary",
-                  backgroundColor: isActive ? "#F1F7FD" : "transparent",
-                  border: "1px solid",
-                  borderColor: isActive ? "#D8E8F7" : "transparent",
-                  borderRadius: "14px",
+                  justifyContent: "flex-start",
+                  gap: 1.25,
+                  px: showLabels ? 2 : "25px",
+                  color: isActive ? "#1C84C6" : "#676A6C",
+                  backgroundColor: isActive ? "#F0F2F3" : "transparent",
+                  borderLeft: isActive ? "3px solid #1C84C6" : "3px solid transparent",
                   textDecoration: "none",
-                  transition:
-                    "color 180ms ease, background-color 180ms ease, border-color 180ms ease",
-                  "&:hover": {
-                    color: "primary.main",
-                    backgroundColor: isActive ? "#EDF5FC" : "#F7FAFD",
-                    borderColor: isActive ? "#CFE2F5" : "#EDF2F6",
-                  },
-                  "&:focus-visible": {
-                    outlineOffset: -2,
-                  },
+                  transition: "color 140ms ease, background-color 140ms ease, padding 220ms cubic-bezier(0.16, 1, 0.3, 1)",
+                  "&:hover": { color: "#1C84C6", backgroundColor: "#F3F5F6" },
+                  "&:focus-visible": { outlineOffset: -3 },
                 }}
               >
-                <Box
-                  sx={{
-                    display: "grid",
-                    width: 34,
-                    height: 34,
-                    flex: "0 0 34px",
-                    placeItems: "center",
-                    borderRadius: "10px",
-                    color: isActive ? "primary.main" : "inherit",
-                    backgroundColor: isActive ? "#E4F0FB" : "transparent",
-                    transition: "color 180ms ease, background-color 180ms ease",
-                  }}
-                >
-                  <Icon sx={{ fontSize: 20 }} />
-                </Box>
-
-                {!collapsed && (
-                  <Typography
-                    component="span"
-                    sx={{
-                      minWidth: 0,
-                      flex: 1,
-                      overflow: "hidden",
-                      fontSize: "0.73rem",
-                      fontWeight: isActive ? 700 : 600,
-                      letterSpacing: "0.052em",
-                      textOverflow: "ellipsis",
-                      textTransform: "uppercase",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                <Icon sx={{ flex: "0 0 auto", fontSize: mobile ? 21 : 20 }} />
+                <Box sx={{ minWidth: 0, maxWidth: showLabels ? 160 : 0, flex: 1, overflow: "hidden", opacity: showLabels ? 1 : 0, transform: showLabels ? "translateX(0)" : "translateX(-8px)", transition: "max-width 260ms cubic-bezier(0.16, 1, 0.3, 1), opacity 150ms ease, transform 220ms cubic-bezier(0.16, 1, 0.3, 1)" }}>
+                  <Typography aria-hidden={!showLabels} sx={{ overflow: "hidden", fontSize: 13, fontWeight: isActive ? 650 : 500, textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {module.label}
                   </Typography>
-                )}
-
-                {!collapsed && isActive && (
-                  <Box
-                    aria-hidden="true"
-                    sx={{
-                      width: 6,
-                      height: 6,
-                      flex: "0 0 6px",
-                      borderRadius: "50%",
-                      backgroundColor: "secondary.main",
-                    }}
-                  />
-                )}
-              </Box>
-            </Tooltip>
+                </Box>
+                {module.slug === "facturacion" && showLabels && <ExpandMoreRoundedIcon sx={{ ml: "auto", fontSize: 18, transform: billingOpen ? "rotate(180deg)" : "rotate(0)", transition: "transform 180ms ease" }} />}
+                </Box>
+              </Tooltip>
+              {module.slug === "facturacion" && (
+                <Box sx={{ display: "grid", gridTemplateRows: billingOpen ? "1fr" : "0fr", transition: "grid-template-rows 240ms cubic-bezier(0.16,1,0.3,1)" }}>
+                  <Box sx={{ minHeight: 0, overflow: "hidden" }}>
+                    {billingItems.map((item) => {
+                      const SubIcon = item.icon;
+                      const subActive = pathname === `/facturacion/${item.hash}` || (pathname === "/facturacion" && billingHash === item.hash);
+                      return <Tooltip key={item.hash} title={showLabels ? "" : item.label} placement="right" enterDelay={250}><Box component={Link} href={`/facturacion/${item.hash}`} onClick={mobile ? onCloseMobile : undefined} sx={{ display: "flex", minHeight: 38, alignItems: "center", justifyContent: showLabels ? "flex-start" : "center", gap: 1, pl: showLabels ? 4.2 : 0, pr: showLabels ? 1.4 : 0, color: subActive ? "#1C84C6" : "#6F7376", backgroundColor: subActive ? "#F0F2F3" : "transparent", textDecoration: "none", transition: "color 140ms ease, background-color 140ms ease", "&:hover": { color: "#1C84C6", backgroundColor: "#F3F5F6" } }}><SubIcon sx={{ flex: "0 0 auto", fontSize: 16 }} /><Typography aria-hidden={!showLabels} sx={{ maxWidth: showLabels ? 160 : 0, overflow: "hidden", fontSize: 11.5, fontWeight: subActive ? 700 : 500, textOverflow: "ellipsis", whiteSpace: "nowrap", opacity: showLabels ? 1 : 0, transition: "max-width 220ms ease, opacity 140ms ease" }}>{item.label}</Typography></Box></Tooltip>;
+                    })}
+                  </Box>
+                </Box>
+              )}
+            </Box>
           );
         })}
       </Box>
 
-      {!collapsed && (
-        <Box
-          sx={{
-            display: "flex",
-            minHeight: 52,
-            alignItems: "center",
-            gap: 1,
-            px: 2.25,
-            color: "text.secondary",
-            opacity: 0.8,
-            borderTop: "1px solid",
-            borderColor: "divider",
-          }}
-        >
-          <Box
-            aria-hidden="true"
-            sx={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: "text.disabled" }}
-          />
-          <Typography sx={{ fontSize: "0.66rem", letterSpacing: "0.035em" }}>
-            Entorno local
-          </Typography>
+      {mobile && (
+        <Box sx={{ display: "flex", minHeight: 42, alignItems: "center", justifyContent: "center", borderTop: "1px solid #E7EAEC", color: "#8A8C8E" }}>
+          <Typography sx={{ fontSize: 12 }}>Modo de interfaz</Typography>
         </Box>
       )}
     </Box>
   );
 }
 
-export function SidebarNavigation({
-  collapsed,
-  mobileOpen,
-  transitionsEnabled,
-  onCloseMobile,
-  onToggleCollapsed,
-}: SidebarNavigationProps) {
+export function SidebarNavigation({ collapsed, mobileOpen, onCloseMobile }: SidebarNavigationProps) {
   const desktopWidth = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH;
 
   return (
     <>
       <Box
         component="aside"
+        aria-label={collapsed ? "Navegación compacta" : "Navegación expandida"}
         sx={{
           display: { xs: "none", md: "block" },
           position: "sticky",
-          top: 76,
+          top: 54,
           width: desktopWidth,
           minWidth: desktopWidth,
-          height: "calc(100dvh - 76px)",
+          height: "calc(100dvh - 54px)",
           alignSelf: "flex-start",
           flex: "0 0 auto",
-          borderRight: "1px solid",
-          borderColor: "divider",
-          transition: transitionsEnabled ? "width 210ms ease, min-width 210ms ease" : "none",
+          borderRight: "1px solid #E7EAEC",
+          transition: "width 260ms cubic-bezier(0.16, 1, 0.3, 1), min-width 260ms cubic-bezier(0.16, 1, 0.3, 1)",
+          willChange: "width",
+          "@media (prefers-reduced-motion: reduce)": { transition: "none" },
         }}
       >
-        <NavigationContent
-          collapsed={collapsed}
-          onToggleCollapsed={onToggleCollapsed}
-        />
+        <NavigationContent collapsed={collapsed} />
       </Box>
 
       <Drawer
@@ -289,26 +192,12 @@ export function SidebarNavigation({
         onClose={onCloseMobile}
         ModalProps={{ keepMounted: true }}
         slotProps={{
-          paper: {
-            sx: {
-              width: "min(276px, calc(100vw - 28px))",
-              backgroundImage: "none",
-              borderRight: "1px solid",
-              borderColor: "divider",
-              boxShadow: "12px 0 36px rgba(7, 26, 58, 0.12)",
-            },
-          },
-          backdrop: {
-            sx: { backgroundColor: "rgba(7, 26, 58, 0.24)" },
-          },
+          paper: { sx: { width: "min(280px, calc(100vw - 28px))", backgroundImage: "none", borderRight: 0, boxShadow: "10px 0 28px rgba(0,0,0,0.16)" } },
+          backdrop: { sx: { backgroundColor: "rgba(0,0,0,0.32)" } },
         }}
         sx={{ display: { xs: "block", md: "none" } }}
       >
-        <NavigationContent
-          collapsed={false}
-          mobile
-          onCloseMobile={onCloseMobile}
-        />
+        <NavigationContent mobile onCloseMobile={onCloseMobile} />
       </Drawer>
     </>
   );

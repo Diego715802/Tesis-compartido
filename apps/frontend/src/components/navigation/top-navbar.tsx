@@ -1,138 +1,73 @@
 "use client";
 
-import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
+import AccessTimeFilledRoundedIcon from "@mui/icons-material/AccessTimeFilledRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
-import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
+import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
+import SmartphoneRoundedIcon from "@mui/icons-material/SmartphoneRounded";
 import AppBar from "@mui/material/AppBar";
-import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
-import Container from "@mui/material/Container";
-import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Toolbar from "@mui/material/Toolbar";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { Brand } from "@/components/brand/brand";
-import { UserIdentity } from "./user-identity";
 
 const utilityButtonStyles = {
-  width: 38,
-  height: 38,
-  borderRadius: "11px",
-  color: "#536579",
-  transition: "color 180ms ease, background-color 180ms ease",
-  "&:hover": {
-    color: "#0B6BDC",
-    backgroundColor: "#EEF5FC",
-  },
+  width: 44,
+  height: 44,
+  borderRadius: 0,
+  color: "#676A6C",
+  "&:hover": { color: "#1C84C6", backgroundColor: "#ECEEEF" },
 } as const;
 
-export function TopNavbar({ onOpenNavigation }: { onOpenNavigation: () => void }) {
+export function TopNavbar({
+  navigationExpanded,
+  onNavigationAction,
+}: {
+  navigationExpanded: boolean;
+  onNavigationAction: () => void;
+}) {
   return (
-    <AppBar
-      component="header"
-      position="sticky"
-      elevation={0}
-      sx={{
-        top: 0,
-        zIndex: (theme) => theme.zIndex.appBar,
-        color: "text.primary",
-        backgroundColor: "rgba(255,255,255,0.98)",
-        borderBottom: "1px solid",
-        borderColor: "divider",
-      }}
-    >
-      <Container maxWidth={false} sx={{ px: { xs: 2, sm: 3, lg: 4.5 } }}>
-        <Toolbar
-          disableGutters
-          sx={{
-            minHeight: { xs: "68px !important", md: "76px !important" },
-          }}
-        >
-          <Tooltip title="Abrir navegación">
-            <IconButton
-              aria-label="Abrir navegación de módulos"
-              onClick={onOpenNavigation}
-              sx={{
-                ...utilityButtonStyles,
-                display: { xs: "inline-flex", md: "none" },
-                mr: 0.75,
-              }}
-            >
-              <MenuRoundedIcon sx={{ fontSize: 21 }} />
-            </IconButton>
-          </Tooltip>
-          <Brand />
-
-          <Divider
-            orientation="vertical"
-            flexItem
-            sx={{
-              display: { xs: "none", lg: "block" },
-              height: 30,
-              alignSelf: "center",
-              mx: 2.5,
-            }}
-          />
-          <Typography
-            sx={{
-              display: { xs: "none", lg: "block" },
-              color: "text.secondary",
-              fontSize: "0.74rem",
-              fontWeight: 600,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-            }}
+    <AppBar component="header" position="fixed" elevation={0} sx={{ zIndex: (theme) => theme.zIndex.appBar, color: "#676A6C", backgroundColor: "#F5F5F5", borderBottom: "1px solid #E7EAEC" }}>
+      <Toolbar disableGutters sx={{ minHeight: "54px !important", px: 1.5 }}>
+        <Tooltip title={navigationExpanded ? "Contraer navegación" : "Expandir navegación"}>
+          <IconButton
+            aria-label={navigationExpanded ? "Contraer navegación de módulos" : "Expandir navegación de módulos"}
+            aria-expanded={navigationExpanded}
+            onClick={onNavigationAction}
+            sx={{ ...utilityButtonStyles, mr: 1.25 }}
           >
-            ERP de operaciones
-          </Typography>
+            <MenuRoundedIcon sx={{ fontSize: 24 }} />
+          </IconButton>
+        </Tooltip>
 
-          <Box sx={{ flexGrow: 1 }} />
+        <Brand compact />
+        <Box sx={{ width: "1px", height: 34, mx: 1.5, backgroundColor: "#D5D7D8" }} />
+        <Typography sx={{ display: { xs: "none", sm: "block" }, fontSize: 13, color: "#676A6C" }}>Operaciones</Typography>
+        <Box sx={{ flex: 1 }} />
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
-            <Tooltip title="Búsqueda disponible próximamente">
-              <IconButton
-                aria-label="Buscar"
-                sx={{ ...utilityButtonStyles, display: { xs: "none", sm: "inline-flex" } }}
-              >
-                <SearchRoundedIcon sx={{ fontSize: 20 }} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Centro de ayuda disponible próximamente">
-              <IconButton
-                aria-label="Ayuda"
-                sx={{ ...utilityButtonStyles, display: { xs: "none", sm: "inline-flex" } }}
-              >
-                <HelpOutlineRoundedIcon sx={{ fontSize: 20 }} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Sin notificaciones nuevas">
-              <IconButton aria-label="Notificaciones" sx={utilityButtonStyles}>
-                <Badge color="primary" variant="dot" invisible>
-                  <NotificationsNoneRoundedIcon sx={{ fontSize: 21 }} />
-                </Badge>
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Configuración disponible próximamente">
-              <IconButton
-                aria-label="Configuración"
-                sx={{ ...utilityButtonStyles, display: { xs: "none", sm: "inline-flex" } }}
-              >
-                <SettingsOutlinedIcon sx={{ fontSize: 20 }} />
-              </IconButton>
-            </Tooltip>
-          </Box>
+        <Box sx={{ display: { xs: "none", md: "inline-flex" }, alignItems: "center", gap: 0.6, mr: 1.4, px: 1.25, py: 0.45, color: "#8F5700", backgroundColor: "#FFD08A", borderRadius: "12px" }}>
+          <AccessTimeFilledRoundedIcon sx={{ fontSize: 14 }} />
+          <Typography sx={{ fontSize: 12, fontWeight: 600 }}>Entorno de demostración</Typography>
+        </Box>
 
-          <Divider
-            orientation="vertical"
-            flexItem
-            sx={{ height: 28, alignSelf: "center", mx: { xs: 1, sm: 1.5 } }}
-          />
-          <UserIdentity />
-        </Toolbar>
-      </Container>
+        <Tooltip title="Vista móvil">
+          <IconButton aria-label="Vista móvil" sx={{ ...utilityButtonStyles, display: { xs: "none", sm: "inline-flex" } }}>
+            <SmartphoneRoundedIcon sx={{ fontSize: 20 }} />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Notificaciones">
+          <IconButton aria-label="Notificaciones" sx={utilityButtonStyles}>
+            <NotificationsRoundedIcon sx={{ fontSize: 21 }} />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Perfil local">
+          <IconButton aria-label="Perfil local" sx={utilityButtonStyles}>
+            <PersonRoundedIcon sx={{ fontSize: 22 }} />
+          </IconButton>
+        </Tooltip>
+      </Toolbar>
     </AppBar>
   );
 }

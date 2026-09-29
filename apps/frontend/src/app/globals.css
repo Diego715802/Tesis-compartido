@@ -1,9 +1,9 @@
 :root {
-  --comecore-navy: #071a3a;
-  --comecore-blue: #0b6bdc;
-  --comecore-cyan: #0ca8cf;
-  --comecore-canvas: #f5f8fb;
-  --comecore-line: #dfe7ef;
+  --comecore-navy: #4b4e51;
+  --comecore-blue: #1c84c6;
+  --comecore-cyan: #23c6c8;
+  --comecore-canvas: #ffffff;
+  --comecore-line: #e7eaec;
 }
 
 * {
@@ -27,6 +27,7 @@ body {
   background: var(--comecore-canvas);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
 }
 
 a {
@@ -44,18 +45,18 @@ a {
 }
 
 ::-webkit-scrollbar-track {
-  background: #eef3f7;
+  background: #f1f2f3;
 }
 
 ::-webkit-scrollbar-thumb {
   min-height: 32px;
-  border: 3px solid #eef3f7;
-  border-radius: 999px;
-  background: #98a8b9;
+  border: 3px solid #f1f2f3;
+  border-radius: 2px;
+  background: #a7a9aa;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #71849a;
+  background: #676a6c;
 }
 
 :focus-visible {

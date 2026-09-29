@@ -1,5 +1,6 @@
 import type { ElementType } from "react";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import DnsOutlinedIcon from "@mui/icons-material/DnsOutlined";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
@@ -8,6 +9,7 @@ import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 
 export type ModuleSlug =
+  | "dashboard"
   | "clientes"
   | "contratos"
   | "planes"
@@ -24,6 +26,12 @@ export type ModuleDefinition = {
 };
 
 export const modules: readonly ModuleDefinition[] = [
+  {
+    slug: "dashboard",
+    label: "Paneles de Control",
+    href: "/",
+    icon: DashboardOutlinedIcon,
+  },
   {
     slug: "clientes",
     label: "Clientes",

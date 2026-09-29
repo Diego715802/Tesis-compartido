@@ -1,212 +1,179 @@
 ---
 name: "ComeCore ERP"
-description: "Panel administrativo sereno y preciso para la operación diaria de un ISP."
+description: "Interfaz operativa compacta para la gestión diaria de un ISP."
 colors:
-  signal-blue: "#0B6BDC"
-  deep-signal-blue: "#074A9F"
-  signal-cyan: "#0CA8CF"
-  infrastructure-navy: "#071A3A"
-  canvas-cool: "#F5F8FB"
-  surface: "#FFFFFF"
-  secondary-text: "#536579"
-  divider: "#DFE7EF"
+  operational-blue: "#1C84C6"
+  operational-blue-dark: "#166B9F"
+  connectivity-cyan: "#23C6C8"
+  ink: "#4B4E51"
+  secondary-text: "#676A6C"
+  muted-text: "#8A8C8E"
+  header: "#F5F5F5"
+  surface: "#FDFDFD"
+  canvas: "#FFFFFF"
+  divider: "#E7EAEC"
+  active-row: "#B7DFEE"
+  active-row-hover: "#ACD9EA"
+  success: "#1AB394"
+  danger: "#A33C3C"
+  demo-bg: "#FFD08A"
+  demo-ink: "#8F5700"
 typography:
-  display:
-    fontFamily: '"Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif'
-    fontSize: "2.25rem"
-    fontWeight: 650
-    lineHeight: 1.1
-    letterSpacing: "-0.025em"
-  brand:
-    fontFamily: '"Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif'
-    fontSize: "1.4rem"
-    fontWeight: 650
-    lineHeight: 1
-    letterSpacing: "-0.035em"
-  body:
-    fontFamily: '"Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif'
-    fontSize: "1rem"
+  page-title:
+    fontFamily: 'Roboto, "Helvetica Neue", Arial, sans-serif'
+    fontSize: "24px"
     fontWeight: 400
-    lineHeight: 1.5
+    lineHeight: 1.25
+    letterSpacing: "normal"
+  section-title:
+    fontFamily: 'Roboto, "Helvetica Neue", Arial, sans-serif'
+    fontSize: "18px"
+    fontWeight: 400
+    lineHeight: 1.3
+    letterSpacing: "normal"
+  card-title:
+    fontFamily: 'Roboto, "Helvetica Neue", Arial, sans-serif'
+    fontSize: "14px"
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: "normal"
+  body:
+    fontFamily: 'Roboto, "Helvetica Neue", Arial, sans-serif'
+    fontSize: "13px"
+    fontWeight: 400
+    lineHeight: 1.45
     letterSpacing: "normal"
   label:
-    fontFamily: '"Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif'
-    fontSize: "0.73rem"
+    fontFamily: 'Roboto, "Helvetica Neue", Arial, sans-serif'
+    fontSize: "13px"
     fontWeight: 600
-    lineHeight: 1.2
-    letterSpacing: "0.055em"
-  status:
-    fontFamily: '"Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif'
-    fontSize: "0.77rem"
-    fontWeight: 650
-    lineHeight: 1.2
-    letterSpacing: "0.08em"
-  micro:
-    fontFamily: '"Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif'
-    fontSize: "0.67rem"
+    lineHeight: 1.3
+    letterSpacing: "normal"
+  metric:
+    fontFamily: 'Roboto, "Helvetica Neue", Arial, sans-serif'
+    fontSize: "29px"
     fontWeight: 400
-    lineHeight: 1.1
+    lineHeight: 1
+    letterSpacing: "normal"
+  micro:
+    fontFamily: 'Roboto, "Helvetica Neue", Arial, sans-serif'
+    fontSize: "12px"
+    fontWeight: 400
+    lineHeight: 1.3
     letterSpacing: "normal"
 rounded:
-  tooltip: "8px"
-  nav-icon: "10px"
-  control: "11px"
-  surface: "14px"
-  signature: "20px"
+  square: "0px"
+  subtle: "2px"
+  control: "24px"
+  badge: "12px"
   pill: "999px"
 spacing:
   micro: "4px"
   compact: "8px"
   control: "12px"
-  standard: "16px"
-  roomy: "24px"
-  section: "48px"
+  card: "15px"
+  standard: "20px"
+  gutter: "30px"
+  section: "40px"
 components:
-  utility-control:
+  topbar:
+    backgroundColor: "{colors.header}"
+    textColor: "{colors.secondary-text}"
+    height: "54px"
+  metric-card:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.secondary-text}"
+    rounded: "{rounded.square}"
+    padding: "15px 20px"
+  search-field:
+    backgroundColor: "{colors.canvas}"
     textColor: "{colors.secondary-text}"
     rounded: "{rounded.control}"
-    size: "38px"
-  sidebar-item-active:
-    backgroundColor: "#F1F7FD"
-    textColor: "{colors.deep-signal-blue}"
-    typography: "{typography.label}"
-    rounded: "{rounded.surface}"
-    height: "50px"
-  status-chip:
-    backgroundColor: "#EDF3F8"
+    height: "46px"
+  selected-client-row:
+    backgroundColor: "{colors.active-row}"
     textColor: "{colors.secondary-text}"
-    rounded: "{rounded.pill}"
-    padding: "6px 12px"
-  signature-tile:
-    backgroundColor: "#F1F7FD"
-    textColor: "{colors.signal-blue}"
-    rounded: "{rounded.signature}"
-    size: "74px"
+    rounded: "{rounded.square}"
 ---
 
 # Design System: ComeCore ERP
 
 ## Overview
 
-**Creative North Star: "El panel de señal calibrada"**
+**Creative North Star: “El tablero operativo medido”**
 
-ComeCore se comporta como un instrumento de operación bien calibrado: blanco, sereno y preciso, con una señal azul que orienta sin competir con el trabajo. La identidad nace del ritmo de navegación, la línea de conectividad y los pequeños estados técnicos, no de una acumulación de tarjetas decorativas.
+ComeCore adopta la densidad y el orden del panel operativo de referencia proporcionado por el usuario. La interfaz debe sentirse como una herramienta de trabajo para un ISP: compacta, estable y legible, con información agrupada en superficies rectangulares, navegación persistente y azul reservado para posición, selección y acción.
 
-La composición mantiene baja fatiga visual durante jornadas extensas. Los acentos se reservan para ubicación, foco y estado; las superficies permanecen limpias, y la infraestructura se sugiere mediante geometría fina, nodos y proporciones controladas.
-
-**Key Characteristics:**
-
-- Predominio de blanco y neutros fríos.
-- Azul y cian usados como señales funcionales, no como relleno dominante.
-- Jerarquía clara entre marca global, módulos laterales y contenido.
-- Geometría amable, precisa y sin ornamento superfluo.
-- Movimiento lento y sutil con alternativa para movimiento reducido.
+La marca ComeCore se conserva, pero la geometría, el ritmo y la jerarquía visual siguen la referencia: barra superior de 54px, rail lateral de 75px, contenido blanco, tarjetas cuadradas con sombra corta y tipografía Roboto de 13px.
 
 ## Colors
 
-La paleta combina un lienzo frío casi blanco con un azul técnico, un cian de conectividad y un azul marino de infraestructura.
+- **Azul operativo (`#1C84C6`)**: navegación activa, enlaces, iconos y acciones primarias.
+- **Cian de conectividad (`#23C6C8`)**: métricas de red y acentos de consumo.
+- **Texto (`#676A6C`)**: tono principal para operación prolongada sin contraste agresivo.
+- **Cabecera (`#F5F5F5`)**: barra superior fija y fondos auxiliares.
+- **Superficie (`#FDFDFD`)**: tarjetas, paneles y modales.
+- **Fila seleccionada (`#B7DFEE`)**: selección inequívoca dentro de tablas o directorios.
+- **Divisor (`#E7EAEC`)**: bordes, separadores y estructura interna.
 
-### Primary
-
-- **Azul de Señal:** dirige estados activos, foco, iconografía principal y el acento de la marca.
-- **Azul de Señal Profundo:** aporta contraste en texto activo y acciones de alta legibilidad.
-
-### Secondary
-
-- **Cian de Enlace:** aparece en nodos, recorridos y microseñales asociadas con conectividad.
-
-### Neutral
-
-- **Azul Marino de Infraestructura:** texto principal y ancla visual de la identidad.
-- **Lienzo Frío:** fondo general que separa discretamente el área de trabajo de las superficies blancas.
-- **Superficie Blanca:** navbar, navegación y planos principales.
-- **Texto Secundario:** etiquetas auxiliares y estados de menor jerarquía.
-- **Divisor Técnico:** bordes finos que estructuran sin crear cajas pesadas.
-
-**The Sparse Signal Rule.** El azul y el cian señalan posición, acción o conectividad; nunca deben teñir grandes áreas de la interfaz.
+El azul comunica estado o navegación; no se utiliza como fondo decorativo de grandes áreas. Los ceros y estados vacíos permanecen neutrales para no simular actividad.
 
 ## Typography
 
-**Display Font:** Avenir Next, con Segoe UI y sans-serif de sistema como respaldo.
-**Body Font:** Avenir Next, con Segoe UI y sans-serif de sistema como respaldo.
+Roboto es la única familia de interfaz, con `Helvetica Neue`, Arial y sans-serif como respaldo. El cuerpo base es de 13px. Las etiquetas usan 600 de peso; los títulos de tarjetas 14px; los títulos de sección 18px; el título de página 24px; y las cifras principales 29px.
 
-**Character:** Una sola familia sans serif geométrica mantiene continuidad entre marca y producto. El contraste depende de peso, escala, espaciado y mayúsculas controladas, no de mezclar familias.
-
-### Hierarchy
-
-- **Display:** títulos de módulo compactos, seminegrita y con tracking cerrado; baja a 1.75rem en pantallas pequeñas.
-- **Brand:** nombre ComeCore compacto y seminegrita, con el segmento Core destacado por color.
-- **Body:** texto funcional de lectura continua con densidad moderada.
-- **Label:** navegación y estados en mayúsculas, con tracking abierto y peso medio-alto.
-
-**The Calm Caps Rule.** Las mayúsculas se limitan a rótulos breves; nunca se usan para párrafos o mensajes extensos.
+No se usan mayúsculas sostenidas ni tracking decorativo. La jerarquía depende del peso, la alineación y la separación vertical.
 
 ## Layout
 
-La interfaz utiliza tres estratos: navbar global de 76px, sidebar de módulos y contenido flexible. En desktop y laptop, la sidebar mide 244px expandida y 76px colapsada; conserva iconos, estado activo y tooltips, mientras el contenido se reajusta en una transición breve de 210ms.
+La barra superior permanece fija a 54px. En escritorio, la navegación es un rail fijo de 75px con iconos centrados y una línea azul de 3px para el módulo activo. El contenido comienza después de ambos elementos.
 
-En tablet horizontal se mantiene la navegación colapsable para proteger el espacio de trabajo. Debajo de 900px, la navbar reduce su altura a 68px, oculta utilidades secundarias y abre la navegación como drawer temporal. El documento nunca genera desplazamiento horizontal global y el drawer se cierra al seleccionar un módulo.
+La banda de breadcrumb mide 56px. El área de trabajo usa `30px 20px 40px` de padding. En el dashboard se aplica una cuadrícula de 12 columnas con gutters de 30px: la primera fila contiene seis tarjetas de dos columnas y 210px de altura; la segunda, cuatro tarjetas de tres columnas y 210px; debajo aparecen contratos conectados y, finalmente, la gráfica de clientes junto al historial de contratos.
 
-**The Three-Layer Rule.** Navbar global, sidebar de módulos y contenido deben seguir siendo planos visualmente distintos aunque compartan el mismo fondo claro.
+Debajo de 900px el rail se convierte en drawer y el contenido se apila a una columna. Nunca debe aparecer desplazamiento horizontal global.
 
 ## Elevation & Depth
 
-El sistema es plano por defecto. La profundidad se construye con cambios tonales, bordes de un píxel y separación espacial; las sombras quedan reservadas al medallón del placeholder y al drawer móvil cuando debe separarse del contenido.
+Las superficies operativas utilizan una sola sombra medible: `3px 3px 8px rgba(0, 0, 0, 0.18)`. El drawer móvil usa `10px 0 28px rgba(0, 0, 0, 0.16)` y el botón flotante de ayuda `0 3px 10px rgba(0, 0, 0, 0.20)`.
 
-### Shadow Vocabulary
-
-- **Señal Ambiental** (`0 14px 30px rgba(7, 45, 91, 0.08)`): reservada para el núcleo visual de un estado vacío o un punto focal equivalente.
-- **Drawer Lateral** (`12px 0 36px rgba(7, 26, 58, 0.12)`): separación estructural del panel temporal sobre contenido móvil.
-
-**The Flat-by-Default Rule.** Una superficie en reposo no necesita sombra; debe justificarse por jerarquía o estado.
+La sombra separa paneles del lienzo sin convertirlos en tarjetas redondeadas. No se usan gradientes ni efectos translúcidos.
 
 ## Shapes
 
-Los controles compactos usan esquinas suavemente redondeadas; las superficies siguen el radio base de 14px y los elementos distintivos pueden llegar a 20px. Los indicadores de estado son píldoras completas. Círculos, trayectorias finas y nodos refuerzan la idea de señal sin ilustraciones literales de red.
+Tarjetas, filas, barras, modales y paneles son rectangulares, con radio 0–2px. Solo la búsqueda, filtros, badges de estado y botones flotantes pueden usar radios completos. Esta diferencia hace que los controles de filtrado se reconozcan sin suavizar toda la interfaz.
 
 ## Components
 
-### Utility Controls
+### Top Bar
 
-- **Shape:** botón cuadrado compacto con esquinas suaves y área de 38px.
-- **Default:** icono neutral sobre superficie transparente.
-- **Hover / Focus:** tinte azul muy claro, icono azul y anillo de foco exterior visible.
-- **Behavior:** sin ripple; tooltip tardío para explicar acciones todavía no disponibles.
-
-### Status Chips
-
-- **Style:** píldora neutral con punto cian, etiqueta breve en mayúsculas y tracking abierto.
-- **State:** informa disponibilidad sin parecer una acción interactiva.
+Barra fija de 54px, fondo `#F5F5F5`, borde inferior fino y marca compacta. Las utilidades viven a la derecha en áreas táctiles de al menos 40px.
 
 ### Sidebar Navigation
 
-- **Style:** siete módulos verticales con icono lineal, etiqueta consistente y densidad ligera.
-- **Default:** texto secundario y fondo transparente.
-- **Hover:** fondo apenas tonal y borde prácticamente imperceptible.
-- **Active:** superficie azul muy clara, icono sobre cápsula tonal, texto profundo y nodo cian discreto.
-- **Expanded / Collapsed:** muestra icono y nombre a 244px; conserva iconos y tooltips a 76px. La preferencia se guarda localmente.
-- **Responsive:** debajo de 900px se convierte en drawer con backdrop sobrio y control de cierre explícito.
+Rail de 75px con iconos MUI de una sola familia. El estado activo utiliza una barra azul de 3px y fondo `#F5F7F8`; en móvil se presenta como drawer. Los tooltips explican los iconos sin añadir etiquetas persistentes.
 
-### Signal Placeholder
+### Metric Card
 
-Es la firma de los módulos aún no disponibles: un medallón central con icono oficial de MUI, trayectoria cian, nodos azules, título del módulo y estado “Próximamente”. Comunica estructura sin simular datos ni funcionalidad inexistente.
+Superficie `#FDFDFD`, sin radio, sombra corta, padding de 15–20px y encabezado separado por borde. Los números se alinean de forma tabular y nunca se inventan datos para llenar la interfaz.
 
-### Brand Signal
+### Search and Filters
 
-Una trayectoria SVG punteada atraviesa sutilmente el bloque de marca. Sus nodos y movimiento lento representan flujo e infraestructura; nunca debe interferir con la lectura del logo ni convertirse en una ilustración protagonista. La navbar utiliza la composición completa y la cabecera expandida de la sidebar reutiliza una variante compacta del mismo componente.
+El buscador principal mide 46px, usa borde gris, radio 24px e icono al inicio. Los filtros secundarios comparten la forma de cápsula; las acciones principales siguen siendo rectangulares.
 
-## Do's and Don'ts
+### Selected Client Row
 
-### Do:
+La fila seleccionada usa `#B7DFEE`, texto gris oscuro y una barra azul de 3px. Los botones de acción se agrupan al extremo derecho y mantienen tamaños compactos consistentes.
 
-- **Do** mantener el blanco como superficie dominante y reservar el acento para orientación y estado.
-- **Do** conservar exactamente una familia de iconos lineales de MUI en la navegación principal.
-- **Do** sostener áreas táctiles claras, foco visible y soporte para movimiento reducido.
-- **Do** adaptar la densidad ocultando elementos secundarios antes de reducir legibilidad.
+### Empty States
 
-### Don't:
+Un estado vacío conserva el título y el marco del panel, muestra un mensaje directo y no simula datos, gráficas o disponibilidad. En esta fase, la gráfica de consumo solo aparece como estructura hasta que exista la configuración real de red.
 
-- **Don't** convertir la sidebar en un template genérico con secciones inventadas, badges o accesos no solicitados.
-- **Don't** usar gradientes, colores saturados o sombras pesadas para fabricar jerarquía.
-- **Don't** presentar datos, acciones, badges o controles que sugieran funcionalidad todavía inexistente.
-- **Don't** añadir módulos fuera de Clientes, Contratos, Planes, Facturación, Inventario, Servidores y Nodos durante esta etapa.
+## Do’s and Don’ts
+
+- Mantener la densidad, proporciones y orden de la referencia Wispro.
+- Usar Roboto, superficies cuadradas, gutters de 30px y sombra corta de forma consistente.
+- Reservar azul y cian para orientación, selección, métricas y conectividad.
+- Conservar foco visible, áreas táctiles y adaptación móvil sin overflow.
+- No añadir gradientes, glassmorphism, radios grandes ni tarjetas promocionales.
+- No presentar datos operativos, conectividad o acciones como reales cuando son solo interfaz.
+- No romper el shell global entre Dashboard, Clientes y módulos pendientes.

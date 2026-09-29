@@ -1,112 +1,42 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-25T15:55:26Z",
+  "generatedAt": "2026-09-26T18:30:00Z",
   "title": "Design System: ComeCore ERP",
   "extensions": {
     "colorMeta": {
-      "signal-blue": {
-        "role": "primary",
-        "displayName": "Azul de Señal",
-        "canonical": "#0B6BDC",
-        "tonalRamp": ["#04172D", "#052B57", "#073F82", "#0853AE", "#0B6BDC", "#4A8DE3", "#97BDEC", "#E7F1FC"]
-      },
-      "deep-signal-blue": {
-        "role": "primary",
-        "displayName": "Azul de Señal Profundo",
-        "canonical": "#074A9F",
-        "tonalRamp": ["#020D18", "#031D37", "#052D59", "#063D7B", "#074A9F", "#4B78B0", "#9FB8D3", "#E8F0F8"]
-      },
-      "signal-cyan": {
-        "role": "secondary",
-        "displayName": "Cian de Enlace",
-        "canonical": "#0CA8CF",
-        "tonalRamp": ["#032329", "#05434E", "#076172", "#087F98", "#0CA8CF", "#55BDD7", "#9CD7E5", "#E8F7FA"]
-      },
-      "infrastructure-navy": {
-        "role": "neutral",
-        "displayName": "Azul Marino de Infraestructura",
-        "canonical": "#071A3A",
-        "tonalRamp": ["#020812", "#031024", "#051631", "#071A3A", "#42536B", "#8190A2", "#C0C8D1", "#F0F2F4"]
-      },
-      "canvas-cool": {
-        "role": "neutral",
-        "displayName": "Lienzo Frío",
-        "canonical": "#F5F8FB",
-        "tonalRamp": ["#11171C", "#29343D", "#4D5B66", "#74828D", "#A5B1BA", "#CFD7DE", "#E6ECF1", "#F5F8FB"]
-      },
-      "surface": {
-        "role": "neutral",
-        "displayName": "Superficie Blanca",
-        "canonical": "#FFFFFF",
-        "tonalRamp": ["#171717", "#353535", "#5C5C5C", "#858585", "#ADADAD", "#D0D0D0", "#EBEBEB", "#FFFFFF"]
-      },
-      "secondary-text": {
-        "role": "neutral",
-        "displayName": "Texto Secundario",
-        "canonical": "#536579",
-        "tonalRamp": ["#11171D", "#222D38", "#344454", "#536579", "#7C8A98", "#A5AFB9", "#D0D6DC", "#F2F4F6"]
-      },
-      "divider": {
-        "role": "neutral",
-        "displayName": "Divisor Técnico",
-        "canonical": "#DFE7EF",
-        "tonalRamp": ["#12171B", "#2D353D", "#55616C", "#7F8B96", "#ABB4BC", "#CDD3D9", "#DFE7EF", "#F5F8FA"]
-      }
+      "operational-blue": { "role": "primary", "displayName": "Azul operativo", "canonical": "#1C84C6" },
+      "operational-blue-dark": { "role": "primary", "displayName": "Azul operativo oscuro", "canonical": "#166B9F" },
+      "connectivity-cyan": { "role": "secondary", "displayName": "Cian de conectividad", "canonical": "#23C6C8" },
+      "ink": { "role": "neutral", "displayName": "Tinta", "canonical": "#4B4E51" },
+      "secondary-text": { "role": "neutral", "displayName": "Texto secundario", "canonical": "#676A6C" },
+      "muted-text": { "role": "neutral", "displayName": "Texto atenuado", "canonical": "#8A8C8E" },
+      "header": { "role": "neutral", "displayName": "Cabecera", "canonical": "#F5F5F5" },
+      "surface": { "role": "neutral", "displayName": "Superficie", "canonical": "#FDFDFD" },
+      "canvas": { "role": "neutral", "displayName": "Lienzo", "canonical": "#FFFFFF" },
+      "divider": { "role": "neutral", "displayName": "Divisor", "canonical": "#E7EAEC" },
+      "active-row": { "role": "secondary", "displayName": "Fila seleccionada", "canonical": "#B7DFEE" },
+      "active-row-hover": { "role": "secondary", "displayName": "Fila seleccionada hover", "canonical": "#ACD9EA" },
+      "success": { "role": "semantic", "displayName": "Correcto", "canonical": "#1AB394" },
+      "danger": { "role": "semantic", "displayName": "Alerta", "canonical": "#A33C3C" },
+      "demo-bg": { "role": "semantic", "displayName": "Demo fondo", "canonical": "#FFD08A" },
+      "demo-ink": { "role": "semantic", "displayName": "Demo texto", "canonical": "#8F5700" }
     },
     "typographyMeta": {
-      "display": {
-        "displayName": "Título de módulo",
-        "purpose": "Identifica cada módulo en el placeholder y baja a 1.75rem en pantallas pequeñas."
-      },
-      "brand": {
-        "displayName": "Marca",
-        "purpose": "Mantiene el wordmark compacto y técnicamente sobrio."
-      },
-      "body": {
-        "displayName": "Cuerpo",
-        "purpose": "Texto funcional de lectura continua."
-      },
-      "label": {
-        "displayName": "Etiqueta operativa",
-        "purpose": "Navegación y estados breves en mayúsculas controladas."
-      },
-      "status": {
-        "displayName": "Estado",
-        "purpose": "Disponibilidad breve en mayúsculas con tracking abierto."
-      },
-      "micro": {
-        "displayName": "Microtexto",
-        "purpose": "Contexto secundario dentro de navegación y utilidades compactas."
-      }
+      "page-title": { "displayName": "Título de página", "purpose": "Encabezado principal de módulo a 24px." },
+      "section-title": { "displayName": "Título de sección", "purpose": "Secciones de dashboard y detalle a 18px." },
+      "card-title": { "displayName": "Título de tarjeta", "purpose": "Encabezado compacto de tarjetas operativas a 14px." },
+      "body": { "displayName": "Cuerpo", "purpose": "Texto base Roboto de 13px para alta densidad." },
+      "label": { "displayName": "Etiqueta", "purpose": "Rótulos y navegación con peso 600." },
+      "metric": { "displayName": "Métrica", "purpose": "Cifras principales tabulares a 29px." },
+      "micro": { "displayName": "Microtexto", "purpose": "Contexto auxiliar a 12px." }
     },
     "shadows": [
-      {
-        "name": "signal-ambient",
-        "value": "0 14px 30px rgba(7, 45, 91, 0.08)",
-        "purpose": "Eleva únicamente el núcleo visual de un estado vacío o punto focal equivalente."
-      },
-      {
-        "name": "drawer-lateral",
-        "value": "12px 0 36px rgba(7, 26, 58, 0.12)",
-        "purpose": "Separa estructuralmente el drawer móvil del contenido."
-      }
+      { "name": "operational-card", "value": "3px 3px 8px rgba(0, 0, 0, 0.18)", "purpose": "Separa tarjetas y paneles operativos del lienzo." },
+      { "name": "mobile-drawer", "value": "10px 0 28px rgba(0, 0, 0, 0.16)", "purpose": "Distingue la navegación móvil superpuesta." },
+      { "name": "floating-help", "value": "0 3px 10px rgba(0, 0, 0, 0.20)", "purpose": "Eleva únicamente la ayuda flotante." }
     ],
     "motion": [
-      {
-        "name": "state-standard",
-        "value": "180ms ease",
-        "purpose": "Transiciones de color, fondo y estado activo."
-      },
-      {
-        "name": "sidebar-layout",
-        "value": "210ms ease",
-        "purpose": "Transición breve entre la anchura expandida y colapsada de la navegación lateral."
-      },
-      {
-        "name": "signal-travel",
-        "value": "5s cubic-bezier(0.16, 1, 0.3, 1) infinite",
-        "purpose": "Desplazamiento lento de la línea punteada de marca; se desactiva con movimiento reducido."
-      }
+      { "name": "state-fast", "value": "140ms ease", "purpose": "Hover, foco y selección sin animación ornamental." }
     ],
     "breakpoints": [
       { "name": "xs", "value": "0px" },
@@ -118,88 +48,78 @@
   },
   "components": [
     {
-      "name": "Brand Signal",
-      "kind": "custom",
-      "description": "Wordmark con trayectoria de conectividad; composición completa en navbar y variante compacta en la sidebar expandida.",
-      "html": "<div class=\"ds-brand\"><svg class=\"ds-brand-signal\" viewBox=\"0 0 224 58\" aria-hidden=\"true\"><path d=\"M3 42C28 42 31 16 58 16c25 0 24 27 51 27h44c26 0 27-19 54-19h14\"/><circle cx=\"58\" cy=\"16\" r=\"2.5\"/><circle cx=\"109\" cy=\"43\" r=\"2\"/><circle cx=\"207\" cy=\"24\" r=\"2.5\"/></svg><span class=\"ds-brand-name\">Come<span>Core</span></span></div>",
-      "css": ".ds-brand { position: relative; display: inline-flex; min-width: 208px; height: 58px; align-items: center; color: #071A3A; font-family: \"Avenir Next\", Avenir, \"Segoe UI\", sans-serif; } .ds-brand-signal { position: absolute; inset: 0 auto auto 15px; width: 224px; height: 58px; overflow: visible; fill: rgba(12,168,207,.32); } .ds-brand-signal path { fill: none; stroke: rgba(12,168,207,.28); stroke-width: 1.25; stroke-linecap: round; stroke-dasharray: 2 7; } .ds-brand-name { position: relative; font-size: 1.4rem; font-weight: 650; line-height: 1; letter-spacing: -.035em; background: #fff; padding: 8px 10px; border-radius: 999px; } .ds-brand-name span { color: #0B6BDC; }"
-    },
-    {
-      "name": "Utility Control",
-      "kind": "button",
-      "refersTo": "utility-control",
-      "description": "Control auxiliar compacto para búsqueda, ayuda, notificaciones o configuración.",
-      "html": "<button class=\"ds-utility-control\" aria-label=\"Buscar\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m15.5 15.5 4 4\"/></svg></button>",
-      "css": ".ds-utility-control { display: grid; width: 38px; height: 38px; place-items: center; padding: 0; color: #536579; background: transparent; border: 0; border-radius: 11px; cursor: pointer; transition: color 180ms ease, background-color 180ms ease; } .ds-utility-control svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; } .ds-utility-control:hover { color: #0B6BDC; background: #EEF5FC; } .ds-utility-control:focus-visible { outline: 2px solid #0B6BDC; outline-offset: 3px; } .ds-utility-control:active { background: #E2EFFB; }"
+      "name": "Top Bar",
+      "kind": "navigation",
+      "refersTo": "topbar",
+      "description": "Cabecera fija y compacta de 54px.",
+      "html": "<header class=\"ds-topbar\"><button aria-label=\"Abrir menú\">☰</button><strong>Come<span>Core</span></strong><nav>Operaciones</nav></header>",
+      "css": ".ds-topbar{display:flex;height:54px;align-items:center;gap:16px;padding:0 18px;color:#676A6C;background:#F5F5F5;border-bottom:1px solid #E7EAEC;font:13px Roboto,Arial,sans-serif}.ds-topbar button{width:40px;height:40px;border:0;background:transparent;color:inherit}.ds-topbar strong{font-size:18px}.ds-topbar strong span{color:#1C84C6}.ds-topbar nav{margin-left:auto}"
     },
     {
       "name": "Active Sidebar Item",
-      "kind": "nav",
-      "refersTo": "sidebar-item-active",
-      "description": "Estado activo de un módulo dentro de la navegación lateral expandible.",
-      "html": "<a class=\"ds-sidebar-item ds-sidebar-item-active\" href=\"#\"><span class=\"ds-sidebar-icon\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"9\" cy=\"8\" r=\"3\"/><circle cx=\"17\" cy=\"9\" r=\"2.4\"/><path d=\"M3.5 19c.4-3.4 2.2-5.2 5.5-5.2s5.1 1.8 5.5 5.2M14.5 14.5c3.5-.7 5.5.8 6 4.5\"/></svg></span><span>Clientes</span><i aria-hidden=\"true\"></i></a>",
-      "css": ".ds-sidebar-item { display: inline-flex; width: 220px; min-height: 50px; align-items: center; gap: 10px; padding: 0 8px; color: #536579; background: transparent; border: 1px solid transparent; border-radius: 14px; text-decoration: none; font-family: \"Avenir Next\", Avenir, \"Segoe UI\", sans-serif; font-size: .73rem; font-weight: 600; letter-spacing: .052em; text-transform: uppercase; transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease; } .ds-sidebar-icon { display: grid; width: 34px; height: 34px; flex: 0 0 34px; place-items: center; border-radius: 10px; } .ds-sidebar-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; } .ds-sidebar-item > i { width: 6px; height: 6px; margin-left: auto; background: #0CA8CF; border-radius: 50%; } .ds-sidebar-item:hover { color: #0B6BDC; background: #F7FAFD; border-color: #EDF2F6; } .ds-sidebar-item:focus-visible { outline: 2px solid #0B6BDC; outline-offset: -2px; } .ds-sidebar-item-active { color: #074A9F; background: #F1F7FD; border-color: #D8E8F7; font-weight: 700; } .ds-sidebar-item-active .ds-sidebar-icon { color: #0B6BDC; background: #E4F0FB; }"
+      "kind": "navigation",
+      "description": "Estado activo del rail lateral de 75px.",
+      "html": "<a class=\"ds-rail-item is-active\" href=\"#\" aria-label=\"Clientes\">◉</a>",
+      "css": ".ds-rail-item{position:relative;display:grid;width:75px;height:56px;place-items:center;color:#676A6C;text-decoration:none}.ds-rail-item.is-active{color:#1C84C6;background:#F5F7F8}.ds-rail-item.is-active:before{content:\"\";position:absolute;inset:0 auto 0 0;width:3px;background:#1C84C6}"
     },
     {
-      "name": "Availability Chip",
-      "kind": "chip",
-      "refersTo": "status-chip",
-      "description": "Estado no interactivo para una capacidad anunciada pero aún no disponible.",
-      "html": "<span class=\"ds-status-chip\"><span aria-hidden=\"true\"></span>Próximamente</span>",
-      "css": ".ds-status-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; color: #52677E; background: #EDF3F8; border-radius: 999px; font-family: \"Avenir Next\", Avenir, \"Segoe UI\", sans-serif; font-size: .77rem; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; } .ds-status-chip > span { width: 6px; height: 6px; background: #0CA8CF; border-radius: 50%; }"
+      "name": "Metric Card",
+      "kind": "card",
+      "refersTo": "metric-card",
+      "description": "Tarjeta cuadrada de dashboard con encabezado y cifra tabular.",
+      "html": "<section class=\"ds-metric-card\"><header>Contratos Hoy</header><div><strong>0</strong><span>CREADO</span></div></section>",
+      "css": ".ds-metric-card{height:210px;padding:15px 20px;color:#676A6C;background:#FDFDFD;box-shadow:3px 3px 8px rgba(0,0,0,.18);font:13px Roboto,Arial,sans-serif}.ds-metric-card header{padding-bottom:12px;border-bottom:1px solid #E7EAEC;font-size:14px;font-weight:600}.ds-metric-card div{display:grid;height:145px;place-content:center;text-align:center}.ds-metric-card strong{color:#4B4E51;font-size:29px;font-weight:400}.ds-metric-card span{margin-top:8px;color:#8A8C8E;font-size:12px}"
     },
     {
-      "name": "Signal Placeholder",
-      "kind": "custom",
-      "refersTo": "signature-tile",
-      "description": "Medallón técnico para módulos sin vistas funcionales, con trayectoria, nodos y estado explícito.",
-      "html": "<div class=\"ds-placeholder\"><div class=\"ds-signal-medallion\"><svg viewBox=\"0 0 148 148\" aria-hidden=\"true\"><circle class=\"ds-signal-ring\" cx=\"74\" cy=\"74\" r=\"57\"/><path class=\"ds-signal-path\" d=\"M5 91C27 91 28 55 54 55c27 0 23 40 50 40 17 0 19-18 39-18\"/><circle class=\"ds-signal-node\" cx=\"54\" cy=\"55\" r=\"3\"/><circle class=\"ds-signal-node ds-signal-node-cyan\" cx=\"104\" cy=\"95\" r=\"2.5\"/></svg><span class=\"ds-signal-core\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"5\" cy=\"12\" r=\"2\"/><circle cx=\"12\" cy=\"5\" r=\"2\"/><circle cx=\"19\" cy=\"12\" r=\"2\"/><circle cx=\"12\" cy=\"19\" r=\"2\"/><path d=\"m6.5 10.5 4-4m3 0 4 4m0 3-4 4m-3 0-4-4\"/></svg></span></div><strong>Clientes</strong><span class=\"ds-status-chip\"><i></i>Próximamente</span></div>",
-      "css": ".ds-placeholder { display: grid; justify-items: center; color: #071A3A; font-family: \"Avenir Next\", Avenir, \"Segoe UI\", sans-serif; text-align: center; } .ds-signal-medallion { position: relative; width: 148px; height: 148px; margin-bottom: 44px; } .ds-signal-medallion > svg { position: absolute; inset: 0; width: 100%; height: 100%; } .ds-signal-ring { fill: #FFFFFF; stroke: #DCE7F1; } .ds-signal-path { fill: none; stroke: #0CA8CF; stroke-width: 1.25; stroke-linecap: round; opacity: .34; } .ds-signal-node { fill: #0B6BDC; opacity: .48; } .ds-signal-node-cyan { fill: #0CA8CF; opacity: .52; } .ds-signal-core { position: absolute; inset: 37px; display: grid; place-items: center; color: #0B6BDC; background: #F1F7FD; border: 1px solid #D9E9F8; border-radius: 20px; box-shadow: 0 14px 30px rgba(7,45,91,.08); } .ds-signal-core svg { width: 42px; height: 42px; fill: none; stroke: currentColor; stroke-width: 1.35; stroke-linecap: round; } .ds-placeholder > strong { margin-bottom: 16px; font-size: 2.25rem; font-weight: 650; line-height: 1.1; letter-spacing: -.025em; text-transform: uppercase; } .ds-status-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; color: #52677E; background: #EDF3F8; border-radius: 999px; font-size: .77rem; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; } .ds-status-chip i { width: 6px; height: 6px; background: #0CA8CF; border-radius: 50%; }"
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "search-field",
+      "description": "Buscador principal en cápsula de 46px.",
+      "html": "<label class=\"ds-search\"><span aria-hidden=\"true\">⌕</span><input placeholder=\"Puedes buscar por nombre, teléfono o documento\"></label>",
+      "css": ".ds-search{display:flex;height:46px;align-items:center;gap:8px;padding:0 16px;color:#8A8C8E;background:#FFF;border:2px solid #C7C9CB;border-radius:24px;font:13px Roboto,Arial,sans-serif}.ds-search input{min-width:0;flex:1;border:0;outline:0;color:#676A6C;background:transparent;font:inherit}"
+    },
+    {
+      "name": "Selected Client Row",
+      "kind": "table-row",
+      "refersTo": "selected-client-row",
+      "description": "Fila seleccionada dentro del directorio de clientes.",
+      "html": "<article class=\"ds-client-row\"><strong>Diego Reyes</strong><span>6633228833</span><button aria-label=\"Ver cliente\">⌕</button></article>",
+      "css": ".ds-client-row{position:relative;display:grid;grid-template-columns:1fr 160px 34px;align-items:center;min-height:76px;padding:12px 14px 12px 18px;color:#676A6C;background:#B7DFEE;font:13px Roboto,Arial,sans-serif}.ds-client-row:before{content:\"\";position:absolute;inset:0 auto 0 0;width:3px;background:#1C84C6}.ds-client-row strong{color:#1C84C6}.ds-client-row button{width:30px;height:30px;color:#FFF;background:#1C84C6;border:0;border-radius:2px}"
+    },
+    {
+      "name": "Floating Help",
+      "kind": "button",
+      "description": "Ayuda persistente ubicada al extremo inferior derecho.",
+      "html": "<button class=\"ds-help\" aria-label=\"Ayuda\">?</button>",
+      "css": ".ds-help{display:grid;width:52px;height:52px;place-items:center;color:#FFF;background:#1C84C6;border:0;border-radius:50%;box-shadow:0 3px 10px rgba(0,0,0,.2);font:600 24px Roboto,Arial,sans-serif}"
     }
   ],
   "narrative": {
-    "northStar": "El panel de señal calibrada",
-    "overview": "ComeCore se comporta como un instrumento de operación bien calibrado: blanco, sereno y preciso, con una señal azul que orienta sin competir con el trabajo. La identidad nace del ritmo de navegación, la línea de conectividad y los pequeños estados técnicos, no de una acumulación de tarjetas decorativas.\n\nLa composición mantiene baja fatiga visual durante jornadas extensas. Los acentos se reservan para ubicación, foco y estado; las superficies permanecen limpias, y la infraestructura se sugiere mediante geometría fina, nodos y proporciones controladas.",
+    "northStar": "El tablero operativo medido",
+    "overview": "ComeCore adopta la densidad, geometría y orden del panel operativo de referencia proporcionado por el usuario. La marca se conserva dentro de un shell compacto con barra de 54px, rail de 75px, tarjetas cuadradas y tipografía Roboto de 13px.",
     "keyCharacteristics": [
-      "Predominio de blanco y neutros fríos.",
-      "Azul y cian usados como señales funcionales, no como relleno dominante.",
-      "Jerarquía clara entre marca global, módulos laterales y contenido.",
-      "Geometría amable, precisa y sin ornamento superfluo.",
-      "Movimiento lento y sutil con alternativa para movimiento reducido."
+      "Navegación fija y compacta.",
+      "Superficies rectangulares con sombra corta.",
+      "Azul reservado para navegación, selección y acción.",
+      "Ceros y estados vacíos honestos, sin simular datos.",
+      "Una columna en móvil y ausencia de overflow horizontal."
     ],
     "rules": [
-      {
-        "name": "The Sparse Signal Rule",
-        "body": "El azul y el cian señalan posición, acción o conectividad; nunca deben teñir grandes áreas de la interfaz.",
-        "section": "colors"
-      },
-      {
-        "name": "The Calm Caps Rule",
-        "body": "Las mayúsculas se limitan a rótulos breves; nunca se usan para párrafos o mensajes extensos.",
-        "section": "typography"
-      },
-      {
-        "name": "The Three-Layer Rule",
-        "body": "Navbar global, sidebar de módulos y contenido deben seguir siendo planos visualmente distintos aunque compartan el mismo fondo claro.",
-        "section": "layout"
-      },
-      {
-        "name": "The Flat-by-Default Rule",
-        "body": "Una superficie en reposo no necesita sombra; debe justificarse por jerarquía o estado.",
-        "section": "elevation"
-      }
+      { "name": "Regla de densidad medida", "body": "Conservar 13px de base, gutters de 30px y tarjetas de 210px en las filas métricas de escritorio.", "section": "layout" },
+      { "name": "Regla de superficies cuadradas", "body": "Tarjetas y paneles usan radio 0–2px; las cápsulas se reservan para búsqueda, filtros y badges.", "section": "shapes" },
+      { "name": "Regla de datos honestos", "body": "La interfaz no inventa consumo, contratos o acciones reales mientras no exista integración.", "section": "components" }
     ],
     "dos": [
-      "Do mantener el blanco como superficie dominante y reservar el acento para orientación y estado.",
-      "Do conservar exactamente una familia de iconos lineales de MUI en la navegación principal.",
-      "Do sostener áreas táctiles claras, foco visible y soporte para movimiento reducido.",
-      "Do adaptar la densidad ocultando elementos secundarios antes de reducir legibilidad."
+      "Mantener la proporción y el orden de la referencia Wispro.",
+      "Usar Roboto, azul operativo y una sola familia de iconos MUI.",
+      "Conservar foco visible y adaptación móvil sin overflow.",
+      "Usar la misma estructura visual en Dashboard, Clientes y módulos pendientes."
     ],
     "donts": [
-      "Don't convertir la sidebar en un template genérico con secciones inventadas, badges o accesos no solicitados.",
-      "Don't usar gradientes, colores saturados o sombras pesadas para fabricar jerarquía.",
-      "Don't presentar datos, acciones, badges o controles que sugieran funcionalidad todavía inexistente.",
-      "Don't añadir módulos fuera de Clientes, Contratos, Planes, Facturación, Inventario, Servidores y Nodos durante esta etapa."
+      "No usar gradientes, glassmorphism o radios grandes.",
+      "No presentar datos de red o facturación como reales cuando son solo interfaz.",
+      "No suavizar la densidad con tarjetas promocionales o espacios excesivos.",
+      "No romper el shell global entre rutas."
     ]
   }
 }

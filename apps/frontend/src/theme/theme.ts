@@ -5,49 +5,50 @@ export const appTheme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#0B6BDC",
-      dark: "#074A9F",
-      light: "#E7F1FC",
+      main: "#1C84C6",
+      dark: "#166B9F",
+      light: "#EAF5FB",
       contrastText: "#FFFFFF",
     },
     secondary: {
-      main: "#0CA8CF",
-      dark: "#087A99",
-      light: "#E8F7FA",
-      contrastText: "#061A3A",
+      main: "#23C6C8",
+      dark: "#17999B",
+      light: "#E6F8F8",
+      contrastText: "#FFFFFF",
     },
     background: {
-      default: "#F5F8FB",
-      paper: "#FFFFFF",
+      default: "#FFFFFF",
+      paper: "#FDFDFD",
     },
     text: {
-      primary: "#071A3A",
-      secondary: "#536579",
-      disabled: "#8C9AAA",
+      primary: "#4B4E51",
+      secondary: "#676A6C",
+      disabled: "#A8AAAB",
     },
-    divider: "#DFE7EF",
+    divider: "#E7EAEC",
   },
   shape: {
-    borderRadius: 14,
+    borderRadius: 2,
   },
   typography: {
     fontFamily:
-      '"Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif',
+      'var(--font-roboto), Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif',
+    fontSize: 13,
     h1: {
-      fontWeight: 650,
-      letterSpacing: "-0.03em",
+      fontWeight: 500,
+      letterSpacing: "-0.02em",
     },
     h2: {
-      fontWeight: 650,
-      letterSpacing: "-0.025em",
+      fontWeight: 500,
+      letterSpacing: "-0.015em",
     },
     h3: {
-      fontWeight: 650,
-      letterSpacing: "-0.025em",
+      fontWeight: 500,
+      letterSpacing: "-0.015em",
     },
     button: {
-      fontWeight: 600,
-      letterSpacing: "0.01em",
+      fontWeight: 500,
+      letterSpacing: 0,
       textTransform: "none",
     },
   },
@@ -72,13 +73,66 @@ export const appTheme = createTheme({
       styleOverrides: {
         tooltip: {
           padding: "7px 10px",
-          borderRadius: 8,
-          backgroundColor: "#071A3A",
+          borderRadius: 2,
+          backgroundColor: "#3F3F3F",
           fontSize: "0.75rem",
-          fontWeight: 600,
+          fontWeight: 500,
         },
         arrow: {
-          color: "#071A3A",
+          color: "#3F3F3F",
+        },
+      },
+    },
+    MuiFormControl: {
+      styleOverrides: {
+        root: {
+          minWidth: 0,
+        },
+      },
+    },
+    MuiInputBase: {
+      styleOverrides: {
+        root: {
+          minWidth: 0,
+          maxWidth: "100%",
+          "&.MuiInputBase-multiline textarea": {
+            overflowWrap: "anywhere",
+            textOverflow: "clip",
+            whiteSpace: "pre-wrap",
+          },
+        },
+        input: {
+          minWidth: 0,
+          maxWidth: "100%",
+          textOverflow: "ellipsis",
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          maxWidth: "calc(100% - 30px)",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        },
+      },
+    },
+    MuiFormHelperText: {
+      styleOverrides: {
+        root: {
+          maxWidth: "100%",
+          overflowWrap: "anywhere",
+        },
+      },
+    },
+    MuiSelect: {
+      styleOverrides: {
+        select: {
+          minWidth: 0,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
         },
       },
     },

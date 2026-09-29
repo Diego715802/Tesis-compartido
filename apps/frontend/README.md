@@ -16,6 +16,16 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Google Maps
+
+Las vistas cartográficas usan Google Maps en clientes y nodos. Copia `.env.example` a `.env.local` y agrega una clave restringida para el frontend:
+
+```bash
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=tu_clave_de_google_maps
+```
+
+La clave debe tener habilitada **Maps JavaScript API**. Sin clave, la interfaz muestra un mapa embebido de Google como respaldo; al configurarla se habilitan los marcadores múltiples, la selección de nodos y la edición de coordenadas directamente sobre el mapa.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 ## Learn More

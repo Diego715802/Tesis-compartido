@@ -12,27 +12,27 @@ related_targets:
   - "src/app/(erp)/nodos/page.tsx"
 ---
 
-# ERP application shell
+# Panel operativo de ComeCore
 
 Mode: Operate
 
 Audience: personal interno de un ISP durante sesiones prolongadas en desktop, laptop y tablet.
 
-Job: orientarse entre siete dominios operativos sin entrar todavía en funciones o datos reales.
+Job: comprender el estado operativo del ISP de un vistazo y entrar a los dominios principales desde un riel persistente.
 
-Constraints: solo shell visual y placeholders; MUI; marca ComeCore; blanco dominante; navegación clara; sin dashboard, datos, autenticación ni lógica de negocio.
+Constraints: réplica visual de la interfaz autenticada de Wispro observada por el usuario; MUI; marca ComeCore; solo interfaz, sin integración, autenticación ni lógica de negocio; métricas en cero y estados demostrativos, nunca datos reales inventados.
 
 ## Direction contract
 
-**THESIS:** Un panel de señal calibrada convierte la sidebar en un riel técnico propio de ComeCore. Rechaza las secciones inventadas y las tarjetas repetitivas de un admin template.
+**THESIS:** Un tablero ISP compacto replica la densidad, jerarquía y ritmo medido del panel Wispro, sustituyendo el mundo visual anterior de ComeCore sin copiar su marca ni fingir datos operativos.
 
-**OWN-WORLD:** Blanco técnico, una escala fría de grises azulados, tinta azul marino y una única señal azul-cian. Superficies planas, radios precisos, reglas finas y profundidad casi imperceptible.
+**OWN-WORLD:** Roboto a 13 px; texto gris #676A6C; barra superior #F5F5F5; tarjetas #FDFDFD sin radio, con sombra desplazada 3/3/8 al 18%; azul operativo #1C84C6; riel de iconos de 75 px y reglas grises de un píxel.
 
-**STORY:** La marca establece el sistema; el riel lateral deja claro dónde está el usuario; cada selección resuelve a un espacio sereno que anuncia el módulo y su estado “Próximamente”.
+**STORY:** La barra fija identifica ComeCore; el riel lateral conserva orientación; la banda de contexto nombra “Paneles de Control”; tres pestañas organizan el área y una retícula densa resume contratos, facturación, entradas y tendencias.
 
-**FIRST VIEWPORT:** Navbar de 76 px con marca a la izquierda y usuario a la derecha; debajo, una sidebar de siete módulos expandible de 244 a 76 px. El contenido ocupa el resto con un placeholder centrado y una traza tenue que conecta marca, estado activo e icono.
+**FIRST VIEWPORT:** Navbar fija de 54 px, riel izquierdo de 75 px, banda de contexto de 56 px, contenido con 30/20/40 px de padding; pestañas de 49 px; primera fila de seis tarjetas métricas y segunda de cuatro tarjetas, todas visibles antes del gráfico inferior.
 
-**FORM:** Candidato fundamentado 6, “panel de señal calibrada”, asignado por la semilla `283b4c2c`. La interacción distintiva combina la traza geométrica con un riel lateral que conserva orientación al expandirse, colapsarse o convertirse en drawer, siempre con movimiento breve y respetuoso de reduced-motion.
+**FORM:** Referencia fijada por el usuario: `https://cloud.wispro.co/stats/dashboard?locale=es`, inspeccionada en su sesión de Chrome. Semilla `pinned-reference`. La forma distintiva es su shell Bootstrap-like medido: densidad alta, tarjetas cuadradas, pestaña activa con borde azul y tablero de métricas sin decoración ajena.
 
 **FINISH:** unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 
