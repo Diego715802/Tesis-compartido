@@ -2,7 +2,8 @@ export type CustomerKind = "Persona física" | "Persona jurídica" | "Otro";
 
 export type AccountStatus = "Al corriente" | "Saldo a favor" | "Con deuda";
 
-export type ServiceStatus = "Habilitado" | "Alertado" | "Degradado" | "Suspendido";
+export type ServiceStatus =
+  "Habilitado" | "Deshabilitado" | "Alertado" | "Degradado" | "Suspendido";
 
 export type CustomerInvoice = {
   id: string;
@@ -44,6 +45,63 @@ export type CustomerContract = {
   invoices?: CustomerInvoice[];
   items?: string[];
   tickets?: CustomerTicket[];
+  serialNumber?: string;
+  createdAt?: string;
+  startsAt?: string;
+  updatedAt?: string;
+  username?: string;
+  password?: string;
+  wifiPassword?: string;
+  notes?: string;
+  billingProfile?: string;
+  billingStatus?: string;
+  startBillingAt?: string;
+  billingPeriodStart?: string;
+  billingPeriodEnd?: string;
+  billingDay?: number;
+  trafficTolerancePercent?: number;
+  cpePort?: number;
+  cpeProtocol?: string;
+  parentQueue?: string;
+  priority?: number;
+  network?: string;
+  oltEnabled?: boolean;
+  olt?: string;
+  onuSerial?: string;
+  onuPort?: string;
+  nap?: string;
+  cableModemEnabled?: boolean;
+  cableModemId?: string;
+  latitude?: number;
+  longitude?: number;
+  audit?: CustomerAuditEvent[];
+  pppProfile?: string;
+  pppoeServer?: string;
+  bandwidthControl?: boolean;
+  fullNatAddress?: string;
+  uploadPriority?: number;
+  downloadPriority?: number;
+  discounts?: {
+    id: string;
+    name: string;
+    amount: number;
+    type: "Porcentaje" | "Importe";
+  }[];
+  recurringItems?: {
+    id: string;
+    name: string;
+    amount: number;
+    quantity: number;
+  }[];
+  oltMode?: "Router" | "Bridge";
+  onuId?: string;
+  napPort?: string;
+  sealCode?: string;
+  vlan?: number;
+  extraVlans?: string;
+  oltBandwidthControl?: boolean;
+  catvControl?: boolean;
+  provisionWan?: boolean;
 };
 
 export type CustomerAuditEvent = {
@@ -162,6 +220,7 @@ export type CustomerFilters = {
   account: AccountStatus | "Todos";
 };
 
-export type CustomerDetailTab = "detalle" | "consumo" | "mapa" | "pagos" | "app" | "auditoria";
+export type CustomerDetailTab =
+  "detalle" | "consumo" | "mapa" | "pagos" | "app" | "auditoria";
 
 export type CustomerQuickAction = "detail" | "account" | "edit" | "password";

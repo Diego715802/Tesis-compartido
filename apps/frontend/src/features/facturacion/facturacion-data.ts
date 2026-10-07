@@ -89,24 +89,11 @@ export const billingViewItems: readonly { value: BillingView; label: string }[] 
 ] as const;
 
 const clients = [
-  "Cliente Demo Norte",
-  "Comercio Central Demo",
-  "Residencial Alameda",
-  "Tienda La Estación",
-  "Servicios Horizonte",
-  "Cliente Demo Reforma",
-  "Cafetería del Parque",
-  "Papelería Los Pinos",
-  "Consultorio San Miguel",
-  "Cliente Demo Jardines",
-  "Abarrotes La Plaza",
-  "Estudio Creativo Sur",
+  "Arturo Santiago Mendoza",
 ];
 
 export const draftInvoices: InvoiceRecord[] = [
-  { id: 2218, client: clients[0], business: "COMECORE Telecomunicaciones", contract: "#120 · Plan Conecta 100", type: "Comprobante", amount: 350, balance: 350, issuedAt: "—", period: "Sep. 2026", status: "Borrador", paymentMethod: "Por definir", dueAt: "04/10/2026", concept: "Servicio mensual" },
-  { id: 2219, client: clients[3], business: "COMECORE Telecomunicaciones", contract: "#143 · Plan Negocio", type: "Comprobante", amount: 550, balance: 550, issuedAt: "—", period: "Sep. 2026", status: "Borrador", paymentMethod: "Transferencia", dueAt: "05/10/2026", concept: "Servicio mensual" },
-  { id: 2220, client: clients[7], business: "COMECORE Telecomunicaciones", contract: "#207 · Plan Conecta 50", type: "Factura", amount: 238, balance: 238, issuedAt: "—", period: "Sep. 2026", status: "Borrador", paymentMethod: "Efectivo", dueAt: "06/10/2026", concept: "Reconexión" },
+  { id: 2218, client: clients[0], business: "COMECORE Telecomunicaciones", contract: "#1030 · Fibra 100", type: "Comprobante", amount: 499, balance: 499, issuedAt: "—", period: "Sep. 2026", status: "Borrador", paymentMethod: "Por definir", dueAt: "04/10/2026", concept: "Servicio mensual" },
 ];
 
 export const issuedInvoices: InvoiceRecord[] = clients.map((client, index) => ({
@@ -163,10 +150,6 @@ export const paymentPromises: PaymentPromiseRecord[] = clients.map((client, inde
 
 export const paymentReceipts: ReceiptRecord[] = [
   { id: 848, client: clients[0], status: "Procesado", createdAt: "16/07/2026 21:58:55" },
-  { id: 320, client: clients[1], status: "Procesado", createdAt: "13/07/2026 11:41:19" },
-  { id: 283, client: clients[2], status: "Procesado", createdAt: "12/07/2026 19:14:19" },
-  { id: 140, client: clients[3], status: "Procesado", createdAt: "28/06/2026 14:05:04" },
-  { id: 11, client: clients[4], status: "Procesado", createdAt: "01/06/2026 13:55:54" },
 ];
 
 export const cashAudits: CashAuditRecord[] = [

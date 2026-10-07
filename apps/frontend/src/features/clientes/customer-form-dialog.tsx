@@ -25,6 +25,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { GoogleMap } from "@/components/maps/google-map";
+import { CUSTOMER_ID_PREFIX, customerIdSuffix, normalizeCustomerId } from "./customer-id";
 import type { Customer, CustomerKind } from "./customer-types";
 
 type CustomerFormDialogProps = { customer?: Customer | null; onClose: () => void; onSave: (customer: Customer) => void };
@@ -46,7 +47,7 @@ function Frame({ children }: { children: ReactNode }) {
 
 function blankCustomer(sequence: number): Customer {
   const id = `CUS-${String(sequence).padStart(5, "0")}`;
-  const customId = `CC-${String(sequence).padStart(4, "0")}`;
+  const customId = CUSTOMER_ID_PREFIX;
   return {
     id, customId, kind: "Otro", name: "", document: "", createdAt: new Date().toISOString().slice(0, 10),
     address: { street: "", number: "", neighborhood: "", city: "", state: "", postalCode: "", latitude: 19.2826, longitude: -99.6557, additionalData: "" },
@@ -84,14 +85,23 @@ export function CustomerFormDialog({ customer, onClose, onSave }: CustomerFormDi
     const errors: Record<string, string> = {};
     if (composedName.trim().length < 3) errors.name = "Ingresa el nombre o razón social del cliente.";
     if (draft.document.trim().length < 3) errors.document = "Ingresa el documento o cédula.";
+    if (!customerIdSuffix(draft.customId)) errors.customId = "Escribe el ID que aparecerá después de CC.";
     if (draft.contact.mobile.trim().length < 6) errors.mobile = "Ingresa un teléfono móvil válido.";
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       setTab("basico");
-      window.setTimeout(() => document.getElementById(errors.name ? "customer-field-first-name" : errors.document ? "customer-field-document" : "customer-field-mobile")?.focus(), 0);
+      window.setTimeout(() => document.getElementById(errors.name ? "customer-field-first-name" : errors.document ? "customer-field-document" : errors.customId ? "customer-field-custom-id" : "customer-field-mobile")?.focus(), 0);
       return;
     }
-    onSave({ ...draft, name: composedName.trim(), document: draft.document.trim(), contact: { ...draft.contact, email: draft.contact.email.trim(), mobile: draft.contact.mobile.trim() } });
+    const customId = normalizeCustomerId(draft.customId);
+    onSave({
+      ...draft,
+      customId,
+      name: composedName.trim(),
+      document: draft.document.trim(),
+      portalLink: `https://clientes.comecore.local/acceso/${customId}`,
+      contact: { ...draft.contact, email: draft.contact.email.trim(), mobile: draft.contact.mobile.trim() },
+    });
   }
 
   const latLngAdornment = <InputAdornment position="end"><RefreshRoundedIcon sx={{ color: "primary.main", fontSize: 18 }} /></InputAdornment>;
@@ -122,7 +132,25 @@ export function CustomerFormDialog({ customer, onClose, onSave }: CustomerFormDi
                   <TextField required label="Primer apellido" value={firstLastName} onChange={(e) => setFirstLastName(e.target.value)} sx={inputSx} />
                   <TextField label="Segundo apellido" value={secondLastName} onChange={(e) => setSecondLastName(e.target.value)} sx={inputSx} />
                   <TextField id="customer-field-document" required label="Documento o Cédula de identidad" value={draft.document} error={Boolean(fieldErrors.document)} helperText={fieldErrors.document} onChange={(e) => { setDraft({ ...draft, document: e.target.value }); setFieldErrors((current) => ({ ...current, document: "" })); }} sx={inputSx} />
-                  <TextField label="ID Cliente personalizable" value={draft.customId} onChange={(e) => setDraft({ ...draft, customId: e.target.value })} sx={inputSx} />
+                  <TextField
+                    id="customer-field-custom-id"
+                    required
+                    label="ID Cliente"
+                    value={customerIdSuffix(draft.customId)}
+                    error={Boolean(fieldErrors.customId)}
+                    helperText={fieldErrors.customId || "CC siempre forma parte del identificador."}
+                    onChange={(event) => {
+                      setDraft({ ...draft, customId: normalizeCustomerId(event.target.value) });
+                      setFieldErrors((current) => ({ ...current, customId: "" }));
+                    }}
+                    slotProps={{
+                      input: {
+                        startAdornment: <InputAdornment position="start"><Typography component="span" aria-hidden="true" sx={{ color: "text.primary", fontWeight: 750 }}>CC</Typography></InputAdornment>,
+                      },
+                      htmlInput: { "aria-label": "Parte editable del ID de cliente después de CC" },
+                    }}
+                    sx={inputSx}
+                  />
                   <TextField label="Teléfono" value={draft.contact.landline} onChange={(e) => setDraft({ ...draft, contact: { ...draft.contact, landline: e.target.value } })} sx={inputSx} />
                   <TextField id="customer-field-mobile" required label="Teléfono móvil" value={draft.contact.mobile} error={Boolean(fieldErrors.mobile)} helperText={fieldErrors.mobile || "Formato internacional: +[país][área][número]"} onChange={(e) => { setDraft({ ...draft, contact: { ...draft.contact, mobile: e.target.value } }); setFieldErrors((current) => ({ ...current, mobile: "" })); }} sx={inputSx} />
                   <TextField type="email" label="E-mail de contacto" value={draft.contact.email} onChange={(e) => setDraft({ ...draft, contact: { ...draft.contact, email: e.target.value } })} sx={{ ...inputSx, gridColumn: { sm: "1 / -1" } }} />

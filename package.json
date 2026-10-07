@@ -11,7 +11,8 @@
     "dev:backend": "npm run start:dev --workspace=@erp/backend",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspace=@erp/backend"
+    "test": "npm run test --workspace=@erp/backend",
+    "test:database": "node scripts/test-customer-database.cjs"
   },
   "allowScripts": {
     "fsevents@2.3.3": true,

@@ -7,31 +7,6 @@ import type {
 
 const names = [
   "Arturo Santiago Mendoza",
-  "Jerlys Mojena García",
-  "José de Jesús Vargas",
-  "Alfredo Chaves Romero",
-  "Moisés Roberto Hernández Ibarra",
-  "Carlos Alberto Hernández Rivas",
-  "Irene Luna Cruz",
-  "Mariana Torres Mendoza",
-  "Andrés Valdés Molina",
-  "Paola Jiménez Ortega",
-  "Daniel Ramírez Soto",
-  "Gabriela Flores Ruiz",
-  "Fernando Ortiz Luna",
-  "Alejandra Vega Castillo",
-  "Miguel Ángel Navarro",
-  "Sofía Castillo Campos",
-  "Ricardo Mendoza Silva",
-  "Lucía Herrera Rojas",
-  "Jorge Aguilar Moreno",
-  "Natalia Salgado León",
-  "Víctor Cabrera Núñez",
-  "Camila Reyes Fuentes",
-  "Héctor Morales Díaz",
-  "Valeria Sánchez Ponce",
-  "Óscar Medina Robles",
-  "Renata López Carrillo",
 ] as const;
 
 const streets = [
@@ -80,11 +55,11 @@ export const demoCustomers: Customer[] = names.map((name, index) => {
   const status = accountStatus(index);
   const plan = plans[index % plans.length];
   const kind = customerKind(index);
-  const hasSecondContract = index % 9 === 0;
+  const hasSecondContract = index > 0 && index % 9 === 0;
 
   return {
     id: `CUS-${String(sequence).padStart(5, "0")}`,
-    customId: `CC-${String(sequence).padStart(4, "0")}`,
+    customId: `CC${String(sequence).padStart(4, "0")}`,
     kind,
     name,
     document: kind === "Persona jurídica" ? `CCO${String(880100 + sequence)}A${index}` : `CURP${String(420000 + sequence)}`,

@@ -68,6 +68,7 @@ function Field({ label, value, full = false }: { label: string; value: React.Rea
 }
 
 function statusColors(status: ServiceStatus) {
+  if (status === "Deshabilitado") return { color: "#59636C", backgroundColor: "#EDF0F2" };
   if (status === "Suspendido") return { color: "#9D3434", backgroundColor: "#FFF0F0" };
   if (status === "Degradado") return { color: "#8A5A12", backgroundColor: "#FFF6E5" };
   if (status === "Alertado") return { color: "#7D5F08", backgroundColor: "#FFF9DB" };

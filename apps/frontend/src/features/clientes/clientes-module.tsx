@@ -20,8 +20,10 @@ import Snackbar from "@mui/material/Snackbar";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
-import { useMemo, useState } from "react";
-import { customerFilterOptions, demoCustomers } from "./customer-data";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
+import { demoCustomers } from "./customer-data";
+import { appendCustomerTickets, saveCustomerDetails, useCustomers, useCustomerPersistenceStatus } from "./customer-store";
 import { CustomerDetailPanel } from "./customer-detail-panel";
 import { PasswordDialog } from "./customer-dialogs";
 import { CustomerFormDialog } from "./customer-form-dialog";
@@ -107,7 +109,8 @@ export function ClientesModule() {
   const theme = useTheme();
   const compactDetail = useMediaQuery(theme.breakpoints.down("lg"));
   const [status, setStatus] = useState<LoadStatus>("ready");
-  const [customers, setCustomers] = useState<Customer[]>(demoCustomers);
+  const [customers, setCustomers] = useCustomers();
+  const persistence = useCustomerPersistenceStatus();
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<CustomerFilters>(emptyFilters);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -139,6 +142,10 @@ export function ClientesModule() {
   const profileCustomer = customers.find((customer) => customer.id === profileCustomerId) ?? null;
   const accountCustomer = customers.find((customer) => customer.id === accountCustomerId) ?? null;
   const activeFilterCount = Object.values(filters).filter((value) => value !== "Todos" && value !== "").length;
+  const customerFilterOptions = useMemo(() => ({
+    plans: [...new Set(customers.flatMap((customer) => customer.contracts.map((contract) => contract.plan)))],
+    servers: [...new Set(customers.flatMap((customer) => customer.contracts.map((contract) => contract.server)))],
+  }), [customers]);
 
   function updateQuery(value: string) {
     setQuery(value);
@@ -170,13 +177,16 @@ export function ClientesModule() {
   }
 
   function saveCustomer(updatedCustomer: Customer) {
-    setCustomers((current) => current.some((customer) => customer.id === updatedCustomer.id)
-      ? current.map((customer) => customer.id === updatedCustomer.id ? updatedCustomer : customer)
-      : [updatedCustomer, ...current]);
+    setCustomers((current) => saveCustomerDetails(current, updatedCustomer));
     setSelectedCustomerId(updatedCustomer.id);
     setEditingCustomer(null);
     setCreatingCustomer(false);
-    setMessage("El expediente del cliente se guardó en esta sesión.");
+    setMessage("El expediente del cliente se actualizó.");
+  }
+
+  function saveProfileCustomer(updatedCustomer: Customer) {
+    setCustomers((current) => appendCustomerTickets(current, updatedCustomer));
+    setMessage("El ticket se guardó en el expediente del cliente.");
   }
 
   function exportCustomers(includeAccess = false) {
@@ -241,6 +251,8 @@ export function ClientesModule() {
           </Box>
         </Box>
       </Box>
+
+      {persistence.status === "unavailable" && <Alert severity="warning" sx={{ mb: 2 }}>{persistence.message}</Alert>}
 
       <CustomerToolbar
         query={query}
@@ -350,9 +362,13 @@ export function ClientesModule() {
           onClose={() => setProfileCustomerId(null)}
           onEdit={() => setEditingCustomer(profileCustomer)}
           onOpenAccount={() => setAccountCustomerId(profileCustomer.id)}
-          onUpdate={saveCustomer}
+          onUpdate={saveProfileCustomer}
         />
       )}
+
+      <Suspense fallback={null}>
+        <CustomerQueryProfile customers={customers} onEdit={setEditingCustomer} onOpenAccount={(customer) => setAccountCustomerId(customer.id)} onUpdate={saveProfileCustomer} />
+      </Suspense>
 
       {importOpen && <ImportCustomersDialog onClose={() => setImportOpen(false)} onImport={(fileName) => { setImportOpen(false); setMessage(`${fileName} quedó listo para validación. La importación real se conectará al backend.`); }} />}
 
@@ -380,4 +396,13 @@ export function ClientesModule() {
       </Snackbar>
     </Box>
   );
+}
+
+function CustomerQueryProfile({ customers, onEdit, onOpenAccount, onUpdate }: { customers: Customer[]; onEdit: (customer: Customer) => void; onOpenAccount: (customer: Customer) => void; onUpdate: (customer: Customer) => void }) {
+  const searchParams = useSearchParams();
+  const requestedId = searchParams.get("cliente");
+  const [dismissedId, setDismissedId] = useState<string | null>(null);
+  const customer = customers.find((item) => item.id === requestedId);
+  if (!customer || requestedId === dismissedId) return null;
+  return <CustomerProfileDialog customer={customer} onClose={() => setDismissedId(requestedId)} onEdit={() => onEdit(customer)} onOpenAccount={() => onOpenAccount(customer)} onUpdate={onUpdate} />;
 }

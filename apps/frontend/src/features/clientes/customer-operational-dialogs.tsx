@@ -9,6 +9,7 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import QrCode2RoundedIcon from "@mui/icons-material/QrCode2Rounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
@@ -24,12 +25,13 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import Tab from "@mui/material/Tab";
-import Tabs from "@mui/material/Tabs";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useRef, useState } from "react";
-import type { Customer, CustomerContract, CustomerTicket } from "./customer-types";
+import { ContractFormDialog } from "../contratos/contract-form-dialog";
+import { saveContract } from "../contratos/contract-mutations";
+import { useCustomers } from "./customer-store";
+import type { Customer, CustomerTicket } from "./customer-types";
 
 const currency = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
 const panelSx = { p: { xs: 1.5, sm: 2 }, border: "1px solid", borderColor: "divider", borderRadius: "2px", backgroundColor: "#FFFFFF" } as const;
@@ -74,23 +76,6 @@ export function ImportCustomersDialog({ onClose, onImport }: { onClose: () => vo
   );
 }
 
-function ContractDialog({ customer, onClose, onSave }: { customer: Customer; onClose: () => void; onSave: (contract: CustomerContract) => void }) {
-  const [tab, setTab] = useState("servicio");
-  const [plan, setPlan] = useState("Fibra 100");
-  const [server, setServer] = useState("Core Centro");
-  const [node, setNode] = useState("Nodo Centro");
-  const [ip, setIp] = useState("");
-  const [price, setPrice] = useState("499");
-  const [accessMode, setAccessMode] = useState<CustomerContract["accessMode"]>("Estática");
-  const [interfaceName, setInterfaceName] = useState("");
-  function save() {
-    onSave({ id: `CTR-${Date.now()}`, plan, server, node, ipAddress: ip || "Pendiente de asignación", status: "Habilitado", downstreamGb: 0, upstreamGb: 0, price: Number(price), frequency: "Mensual", accessMode, hostType: "Host", interfaceName, netmask: "255.255.255.0", invoices: [], items: [], tickets: [] });
-  }
-  return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="md"><DialogHeader title="Crear contrato" subtitle={`Servicio nuevo para ${customer.name}`} onClose={onClose} /><Tabs value={tab} onChange={(_, value) => setTab(value)} sx={{ px: 3, borderTop: "1px solid", borderBottom: "1px solid", borderColor: "divider" }}><Tab value="servicio" label="Servicio" /><Tab value="red" label="Red" /><Tab value="facturacion" label="Facturación" /></Tabs><DialogContent sx={{ pt: 2 }}><Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" }, gap: 1.5 }}>{tab === "servicio" && <><TextField disabled label="Cliente" value={customer.name} /><TextField select label="Estado" value="Habilitado"><MenuItem value="Habilitado">Habilitado</MenuItem></TextField><TextField label="Plan" value={plan} onChange={(e) => setPlan(e.target.value)} /><TextField label="Servidor" value={server} onChange={(e) => setServer(e.target.value)} /><TextField label="Nodo / cobertura" value={node} onChange={(e) => setNode(e.target.value)} /></>}{tab === "red" && <><TextField select label="Modo" value={accessMode} onChange={(e) => setAccessMode(e.target.value as CustomerContract["accessMode"])}><MenuItem value="Estática">Estática</MenuItem><MenuItem value="PPPoE">PPPoE</MenuItem><MenuItem value="DHCP">DHCP</MenuItem></TextField><TextField label="Dirección IP" value={ip} onChange={(e) => setIp(e.target.value)} /><TextField label="Interfaz" value={interfaceName} onChange={(e) => setInterfaceName(e.target.value)} /><TextField label="Máscara de red" value="255.255.255.0" /><TextField label="Puerta de enlace" /><TextField label="Dirección MAC" /><TextField label="DNS primario" /><TextField label="DNS secundario" /></>}{tab === "facturacion" && <><TextField type="number" label="Precio mensual" value={price} onChange={(e) => setPrice(e.target.value)} /><TextField select label="Frecuencia" value="Mensual"><MenuItem value="Mensual">Mensual</MenuItem></TextField><TextField label="Perfil de facturación" value="Básico" /><TextField label="Día de vencimiento" value="4" /></>}</Box></DialogContent><DialogActions sx={{ px: 3, pb: 2.5 }}><Button color="inherit" onClick={onClose}>Cancelar</Button><Button variant="contained" onClick={save} disabled={!plan.trim()} sx={{ boxShadow: "none" }}>Crear contrato</Button></DialogActions></Dialog>
-  );
-}
-
 function TicketDialog({ customer, onClose, onSave }: { customer: Customer; onClose: () => void; onSave: (contractId: string, ticket: CustomerTicket) => void }) {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("Soporte técnico");
@@ -117,7 +102,9 @@ function SectionHeader({ title, action }: { title: string; action?: React.ReactN
 }
 
 export function CustomerProfileDialog({ customer, onClose, onEdit, onOpenAccount, onUpdate }: { customer: Customer; onClose: () => void; onEdit: () => void; onOpenAccount: () => void; onUpdate: (customer: Customer) => void }) {
+  const [customers, setCustomers] = useCustomers();
   const [contractOpen, setContractOpen] = useState(false);
+  const [contractError, setContractError] = useState("");
   const [ticketOpen, setTicketOpen] = useState(false);
   const allTickets = customer.contracts.flatMap((contract) => contract.tickets ?? []);
   const allInvoices = customer.contracts.flatMap((contract) => contract.invoices ?? []);
@@ -126,6 +113,7 @@ export function CustomerProfileDialog({ customer, onClose, onEdit, onOpenAccount
       <Dialog open onClose={onClose} fullScreen slotProps={{ paper: { sx: { backgroundColor: "#F5F8FB" } } }}>
         <Box component="header" sx={{ position: "sticky", top: 0, zIndex: 2, display: "flex", alignItems: "center", gap: 1.25, px: { xs: 1.5, md: 3 }, py: 1.4, backgroundColor: "rgba(255,255,255,.96)", borderBottom: "1px solid", borderColor: "divider" }}><IconButton aria-label="Volver al directorio" onClick={onClose} sx={{ borderRadius: "2px" }}><ArrowBackRoundedIcon /></IconButton><Box sx={{ minWidth: 0, flex: 1 }}><Typography sx={{ fontSize: { xs: "1rem", md: "1.16rem" }, fontWeight: 770 }}>{customer.name}</Typography><Typography sx={{ color: "text.secondary", fontSize: "0.68rem" }}>{customer.customId} · Ficha integral del cliente</Typography></Box><Button startIcon={<EditOutlinedIcon />} onClick={onEdit} sx={{ display: { xs: "none", sm: "inline-flex" } }}>Editar</Button><Button variant="contained" onClick={onOpenAccount} sx={{ boxShadow: "none" }}>Cuenta corriente</Button></Box>
         <DialogContent sx={{ width: "100%", maxWidth: 1500, mx: "auto", p: { xs: 1.5, md: 3 } }}>
+          {contractError && !contractOpen && <Alert severity="error" sx={{ mb: 2 }}>{contractError}</Alert>}
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "minmax(0, 1.45fr) minmax(320px, .55fr)" }, gap: 2 }}>
             <Box sx={{ display: "grid", gap: 2 }}>
               <Box sx={panelSx}><SectionHeader title="Información general" /><Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, minmax(0, 1fr))" }, gap: 1.5 }}>{[{ l: "Documento", v: customer.document }, { l: "Teléfono", v: customer.contact.mobile }, { l: "Correo", v: customer.contact.email }, { l: "Dirección", v: `${customer.address.street}, ${customer.address.neighborhood}` }, { l: "Zona", v: customer.assignment.zone }, { l: "Creado", v: customer.createdAt }].map((item) => <Box key={item.l} sx={{ minWidth: 0 }}><Typography sx={{ color: "text.secondary", fontSize: "0.65rem" }}>{item.l}</Typography><Typography sx={{ mt: 0.3, overflowWrap: "anywhere", fontSize: "0.77rem", fontWeight: 650 }}>{item.v}</Typography></Box>)}</Box>{customer.notes && <Typography sx={{ mt: 1.6, p: 1.25, overflowWrap: "anywhere", color: "text.secondary", backgroundColor: "#F7FAFC", borderRadius: "2px", fontSize: "0.71rem" }}>{customer.notes}</Typography>}</Box>
@@ -143,7 +131,16 @@ export function CustomerProfileDialog({ customer, onClose, onEdit, onOpenAccount
           </Box>
         </DialogContent>
       </Dialog>
-      {contractOpen && <ContractDialog customer={customer} onClose={() => setContractOpen(false)} onSave={(contract) => { onUpdate({ ...customer, contracts: [...customer.contracts, contract] }); setContractOpen(false); }} />}
+      {contractOpen && <ContractFormDialog open customers={customers} initialCustomerId={customer.id} saveError={contractError} onClose={() => setContractOpen(false)} onSave={(customerId, contract) => {
+        try {
+          setCustomers((current) => saveContract(current, customerId, contract));
+          setContractError("");
+          return true;
+        } catch (error) {
+          setContractError(error instanceof Error ? error.message : "No se pudo crear el contrato.");
+          return false;
+        }
+      }} />}
       {ticketOpen && <TicketDialog customer={customer} onClose={() => setTicketOpen(false)} onSave={(contractId, ticket) => { onUpdate({ ...customer, contracts: customer.contracts.map((contract) => contract.id === contractId ? { ...contract, tickets: [...(contract.tickets ?? []), ticket] } : contract) }); setTicketOpen(false); }} />}
     </>
   );
