@@ -11,7 +11,7 @@ estado: commit-local-publicacion-pendiente-de-autenticacion
 
 **Motivo:** el usuario solicita subir el avance al repositorio existente `Diego715802/Tesis-compartido` y recibir su enlace.
 
-**Comportamiento resultante:** se prepara un commit local del avance conservando arquitectura, módulos, autenticación, CMC, migraciones, diagramas y documentación. La publicación remota queda pendiente de una sesión GitHub con permisos de escritura. No se han modificado datos de operación ni ejecutado nuevas migraciones por esta tarea.
+**Comportamiento resultante:** se prepara un commit local del avance conservando arquitectura, módulos, autenticación, CMC, migraciones, diagramas y documentación. El commit local de código y documentación es `6da2b36`. La publicación remota queda pendiente de una sesión GitHub con permisos de escritura. No se han modificado datos de operación ni ejecutado nuevas migraciones por esta tarea.
 
 ## Archivos y migraciones
 
@@ -31,7 +31,7 @@ Se incluyen los diagramas y diccionarios existentes; el modelo no se modifica. L
 | Compilación frontend | Correcta, Next build, TypeScript y generación de rutas |
 | Pruebas backend | 8 archivos y 67 pruebas aprobadas |
 | Pruebas de límites frontend | 2 archivos aprobados, autenticación y CMC con upstream simulado |
-| `git diff --check` | Sin errores |
+| `git diff --check` | Sin errores en los archivos previamente rastreados; al incluir documentos nuevos se detectaron espacios finales en diccionarios generados, sin efecto de ejecución |
 | Archivos de entorno reales | Ignorados por Git |
 | Patrones de secretos en candidatos | Sin claves privadas ni tokens de proveedor detectados; URL de ejemplo con marcador y credenciales sintéticas de tests identificadas |
 | Remoto y rama | `origin` apunta al repositorio solicitado; rama local `main`; head remoto observado `ff8f0b75441280ff06cbe965a72820647acf2039` |
