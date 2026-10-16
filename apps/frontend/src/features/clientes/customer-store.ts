@@ -122,7 +122,7 @@ async function requestSnapshot(method: "GET" | "PUT", data?: WorkspaceSnapshot):
   const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     const code = isRecord(body) && typeof body.code === "string" ? body.code : "";
-    const message = response.status === 401 ? "Tu sesión terminó. Vuelve a iniciar sesión." : response.status === 403 ? "No tienes permiso para guardar estos cambios o debes completar la verificación de tu cuenta." : response.status === 409 ? "Otra sesión actualizó los datos. Se cargó la versión del servidor; revisa tus cambios antes de volver a guardarlos." : "No se confirmó el guardado en el servidor. Revisa los datos e inténtalo de nuevo.";
+    const message = code === "PLAN_NOT_FOUND" ? "Selecciona un plan registrado de tu organización. Revisa el catálogo de Planes antes de guardar." : code === "RECORD_CONFLICT" ? "Ya existe un registro con esos identificadores o contacto. Revisa los datos antes de guardar." : response.status === 400 ? "Revisa los datos, fechas e identificadores del cliente y del contrato." : response.status === 401 ? "Tu sesión terminó. Vuelve a iniciar sesión." : response.status === 403 ? "No tienes permiso para guardar estos cambios o debes completar la verificación de tu cuenta." : response.status === 409 ? "Otra sesión actualizó los datos. Se cargó la versión del servidor; revisa tus cambios antes de volver a guardarlos." : "No se confirmó el guardado en el servidor. Revisa los datos e inténtalo de nuevo.";
     throw new PersistenceError(message, response.status, code);
   }
   return readSnapshot(body);

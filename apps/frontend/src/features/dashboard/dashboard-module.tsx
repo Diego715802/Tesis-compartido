@@ -8,6 +8,12 @@ import ButtonBase from "@mui/material/ButtonBase";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
+import dynamic from "next/dynamic";
+import { useIdentity } from "@/components/auth/identity-provider";
+
+const NetworkMonitor = dynamic(() => import("@/features/servidores/mikrotik-monitor").then((module) => module.MikrotikMonitor), {
+  loading: () => <Typography role="status" sx={{ py: 3 }}>Cargando monitor de red…</Typography>,
+});
 
 type MetricCardProps = {
   title: string;
@@ -30,17 +36,6 @@ const secondRow = [
   { title: "Total de facturas emitidas", period: "Septiembre", value: "0", detail: "Facturas de servicio" },
   { title: "Total de facturas en borrador", period: "Septiembre", value: "0", detail: "Facturas de servicio" },
   { title: "Entradas", period: "Septiembre", value: "0", detail: "Creados / 0 Abiertos" },
-];
-
-const serverRow = [
-  { title: "Servidores registrados", value: ["2 Configurados", "2 Conectados"] },
-  { title: "Nodos operativos", value: ["2 Activos", "0 Con alertas"] },
-  { title: "Contratos en línea", value: ["91 Conectados", "0 Suspendidos"] },
-];
-
-const serverSummary = [
-  { title: "Disponibilidad", period: "Últimas 24 horas", value: "100%", detail: "Entorno de demostración" },
-  { title: "Respaldos sincronizados", period: "Hoy", value: "2", detail: "BMU y Mikrotik" },
 ];
 
 const cardSx = {
@@ -95,9 +90,11 @@ function ZeroChart() {
 }
 
 export function DashboardModule() {
+  const identity = useIdentity();
+  const canReadNetwork = identity.permissions.includes("red:read");
   const [dashboardSection, setDashboardSection] = useState("Básico");
-  const visibleFirstRow = dashboardSection === "Básico" ? [firstRow[0]] : dashboardSection === "Facturación" ? firstRow.slice(1) : serverRow;
-  const visibleSecondRow = dashboardSection === "Básico" ? [secondRow[3]] : dashboardSection === "Facturación" ? secondRow.slice(0, 3) : serverSummary;
+  const visibleFirstRow = dashboardSection === "Básico" ? [firstRow[0]] : dashboardSection === "Facturación" ? firstRow.slice(1) : [];
+  const visibleSecondRow = dashboardSection === "Básico" ? [secondRow[3]] : dashboardSection === "Facturación" ? secondRow.slice(0, 3) : [];
 
   return (
     <Box sx={{ minHeight: "calc(100dvh - 54px)", color: "#676A6C", backgroundColor: "#FFFFFF" }}>
@@ -112,14 +109,16 @@ export function DashboardModule() {
       <Box sx={{ px: { xs: 1.5, sm: 2.5 }, pt: 3.75, pb: 5 }}>
         <Box sx={{ minWidth: 0 }}>
           <Box component="nav" aria-label="Secciones representadas del panel" sx={{ display: "flex", minHeight: 49, alignItems: "stretch", borderBottom: "1px solid #E7EAEC" }}>
-            {["Básico", "Facturación", "Servidores"].map((label) => (
+            {["Básico", "Facturación", ...(canReadNetwork ? ["Servidores"] : [])].map((label) => (
               <ButtonBase key={label} aria-pressed={dashboardSection === label} aria-label={`Ver panel ${label}`} onClick={() => setDashboardSection(label)} sx={{ display: "flex", minWidth: { xs: 94, sm: 126 }, alignItems: "center", justifyContent: "center", px: 2, color: dashboardSection === label ? "#4B4E51" : "#676A6C", backgroundColor: dashboardSection === label ? "#FDFDFD" : "transparent", borderTop: dashboardSection === label ? "1px solid #E7EAEC" : "1px solid transparent", borderRight: dashboardSection === label ? "1px solid #E7EAEC" : "1px solid transparent", borderLeft: dashboardSection === label ? "3px solid #1C84C6" : "1px solid transparent", fontSize: 13, fontWeight: dashboardSection === label ? 600 : 400, "&:focus-visible": { outline: "3px solid rgba(28,132,198,.3)", outlineOffset: -3 } }}>
                 {label}
               </ButtonBase>
             ))}
           </Box>
 
-          <Typography aria-live="polite" sx={{ py: 1.25, color: "#8A8C8E", fontSize: 11.5 }}>Vista {dashboardSection} · información de demostración</Typography>
+          <Typography aria-live="polite" sx={{ py: 1.25, color: "#60666B", fontSize: 12 }}>Vista {dashboardSection}{dashboardSection === "Servidores" ? " · telemetría del equipo configurado" : " · resumen administrativo de demostración"}</Typography>
+
+          {canReadNetwork && dashboardSection !== "Facturación" && <Box sx={{ mb: 3 }}><NetworkMonitor embedded /></Box>}
 
           <Box sx={{ display: "grid", gridTemplateColumns: "repeat(12, minmax(0, 1fr))", gap: "30px", pt: 0 }}>
             {visibleFirstRow.map((item) => (
@@ -135,14 +134,14 @@ export function DashboardModule() {
               </MetricCard>
             ))}
 
-            {dashboardSection !== "Facturación" && <Box sx={{ ...cardSx, gridColumn: { xs: "span 12", sm: "span 6", lg: "1 / span 3" }, minHeight: 192 }}>
+            {dashboardSection === "Básico" && <Box sx={{ ...cardSx, gridColumn: { xs: "span 12", sm: "span 6", lg: "1 / span 3" }, minHeight: 192 }}>
               <Box sx={{ px: 1.9, pt: 1.8, pb: 0.9, borderBottom: "1px solid #E7EAEC" }}>
-                <Typography component="h2" sx={{ color: "#4B4E51", fontSize: 14, fontWeight: 600 }}>{dashboardSection === "Servidores" ? "Estado de la infraestructura" : "Contratos conectados"}</Typography>
+                <Typography component="h2" sx={{ color: "#4B4E51", fontSize: 14, fontWeight: 600 }}>Contratos conectados</Typography>
               </Box>
               <Box sx={{ display: "grid", minHeight: 130, placeItems: "center", px: 2.5, textAlign: "center" }}>
                 <Box>
                   <KeyboardDoubleArrowUpRoundedIcon sx={{ color: "#1C84C6", fontSize: 32 }} />
-                  <Typography sx={{ mt: 1, fontSize: 13, lineHeight: 1.5 }}>{dashboardSection === "Servidores" ? "Todos los servidores demo responden correctamente" : "Aquí puede ver contratos conectados / desconectados"}</Typography>
+                  <Typography sx={{ mt: 1, fontSize: 13, lineHeight: 1.5 }}>Aquí puede ver contratos conectados / desconectados</Typography>
                 </Box>
               </Box>
             </Box>}

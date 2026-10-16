@@ -30,9 +30,9 @@ export function safePortalLink(value: string): boolean {
 }
 
 export const contractSchema = z.strictObject({
-  id, plan: text(), server: text(), node: text(), ipAddress: text(100),
+  id, planId: z.uuid().optional(), plan: text(), server: text(), node: text(), ipAddress: text(100),
   status: z.enum(['Habilitado', 'Deshabilitado', 'Alertado', 'Degradado', 'Suspendido']),
-  downstreamGb: nonnegative, upstreamGb: nonnegative, price: nonnegative.optional(), frequency: text().optional(),
+  downstreamGb: nonnegative, upstreamGb: nonnegative, price: z.number().finite().min(0).max(999_999_999_999.99).refine(n => Math.abs(n * 100 - Math.round(n * 100)) < .01).optional(), frequency: text().optional(),
   accessMode: z.enum(['Estática', 'PPPoE', 'DHCP']).optional(), hostType: z.enum(['Host', 'Subred']).optional(),
   interfaceName: text().optional(), macAddress: text(100).optional(), netmask: text(100).optional(), gateway: text(100).optional(),
   dnsPrimary: text(100).optional(), dnsSecondary: text(100).optional(), invoices: z.array(invoice).max(2_000).optional(),

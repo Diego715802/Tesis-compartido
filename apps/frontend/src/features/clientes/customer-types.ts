@@ -25,6 +25,7 @@ export type CustomerTicket = {
 
 export type CustomerContract = {
   id: string;
+  planId?: string;
   plan: string;
   server: string;
   node: string;

@@ -2,6 +2,7 @@ export type SensorValue = {
   value: number;
   unit: string;
 };
+export type HealthSensor = SensorValue & { name: string };
 
 export type MikrotikInterfaceTelemetry = {
   name: string;
@@ -11,6 +12,7 @@ export type MikrotikInterfaceTelemetry = {
   txBytes: number;
   rxBitsPerSecond: number;
   txBitsPerSecond: number;
+  ratesReady: boolean;
 };
 
 export type MikrotikTelemetry = {
@@ -31,6 +33,7 @@ export type MikrotikTelemetry = {
     totalMemoryBytes: number | null;
   };
   health: {
+    sensors: HealthSensor[];
     temperature: SensorValue | null;
     cpuTemperature: SensorValue | null;
     boardTemperature: SensorValue | null;
@@ -44,6 +47,7 @@ export type MikrotikTelemetry = {
     };
   };
   traffic: {
+    ratesReady: boolean;
     rxBitsPerSecond: number;
     txBitsPerSecond: number;
     interfaces: MikrotikInterfaceTelemetry[];
@@ -52,12 +56,14 @@ export type MikrotikTelemetry = {
 
 export type MikrotikHistoryPoint = {
   timestamp: number;
+  connected: boolean;
+  sensors: HealthSensor[];
   cpuLoadPercent: number | null;
   memoryUsedPercent: number | null;
   temperatureCelsius: number | null;
   powerWatts: number | null;
   fanRpm: number | null;
-  rxMegabitsPerSecond: number;
-  txMegabitsPerSecond: number;
-  interfaces: Array<{ name: string; megabitsPerSecond: number }>;
+  rxMegabitsPerSecond: number | null;
+  txMegabitsPerSecond: number | null;
+  interfaces: Array<{ name: string; megabitsPerSecond: number | null }>;
 };

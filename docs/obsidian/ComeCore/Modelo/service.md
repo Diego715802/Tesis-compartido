@@ -64,9 +64,9 @@ erDiagram
     billing_service_billing_profiles o|--o{ service_contracts : "billing_profile_id"
     crm_customers ||--o{ service_contracts : "customer_id"
     billing_legal_entities o|--o{ service_contracts : "legal_entity_id"
-    network_nodes ||--o{ service_contracts : "node_id"
+    network_nodes o|--o{ service_contracts : "node_id"
     catalog_service_plans ||--o{ service_contracts : "plan_id"
-    network_servers ||--o{ service_contracts : "server_id"
+    network_servers o|--o{ service_contracts : "server_id"
     service_contracts ||--o| service_contract_connections : "contract_id, server_id"
     network_server_interfaces ||--o{ service_contract_connections : "interface_id, server_id"
     service_contracts ||--o| service_contract_olt_connections : "contract_id"
@@ -91,16 +91,16 @@ erDiagram
 - **service.contract_olt_connections**: 23 columnas; RLS forzado.
 - **service.contract_recurring_items**: 13 columnas; RLS forzado.
 - **service.contract_usage_samples**: 13 columnas; RLS forzado.
-- **service.contracts**: 30 columnas; RLS forzado.
+- **service.contracts**: 31 columnas; RLS forzado.
 
 ## Cardinalidades de negocio
 
 - billing.service_billing_profiles → service.contracts: **1:N**, padre opcional para cada hijo. FK: `contracts_organization_id_billing_profile_id_fkey`.
 - crm.customers → service.contracts: **1:N**, padre obligatorio para cada hijo. FK: `contracts_organization_id_customer_id_fkey`.
 - billing.legal_entities → service.contracts: **1:N**, padre opcional para cada hijo. FK: `contracts_organization_id_legal_entity_id_fkey`.
-- network.nodes → service.contracts: **1:N**, padre obligatorio para cada hijo. FK: `contracts_organization_id_node_id_fkey`.
+- network.nodes → service.contracts: **1:N**, padre opcional para cada hijo. FK: `contracts_organization_id_node_id_fkey`.
 - catalog.service_plans → service.contracts: **1:N**, padre obligatorio para cada hijo. FK: `contracts_organization_id_plan_id_fkey`.
-- network.servers → service.contracts: **1:N**, padre obligatorio para cada hijo. FK: `contracts_organization_id_server_id_fkey`.
+- network.servers → service.contracts: **1:N**, padre opcional para cada hijo. FK: `contracts_organization_id_server_id_fkey`.
 - service.contracts → service.contract_connections: **1:1**, padre obligatorio para cada hijo. FK: `contract_connections_organization_id_contract_id_server_id_fkey`.
 - network.server_interfaces → service.contract_connections: **1:N**, padre obligatorio para cada hijo. FK: `contract_connections_organization_id_interface_id_server_i_fkey`.
 - service.contracts → service.contract_olt_connections: **1:1**, padre obligatorio para cada hijo. FK: `contract_olt_connections_organization_id_contract_id_fkey`.

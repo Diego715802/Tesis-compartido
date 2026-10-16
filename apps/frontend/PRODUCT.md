@@ -24,6 +24,14 @@ Uso empresarial diario por áreas administrativas, cobranza, soporte y operació
 
 ## Capabilities and Constraints
 
+Actualización funcional, 16 de octubre de 2026: el alcance visual inicial que se
+conserva abajo es histórico. El ERP ya integra autenticación Better Auth/PostgreSQL,
+sesiones, MFA y permisos servidor; clientes/planes/contratos tienen persistencia
+relacional. El Panel de Control y Servidores incorporan ocho gráficas ECharts de
+telemetría MikroTik de solo lectura. El router físico y el histórico persistente de
+telemetría siguen pendientes. Sin sensores no se fabrican lecturas. El resumen
+administrativo restante conserva estados de demostración identificados.
+
 - Frontend existente en React, TypeScript y Next.js con App Router.
 - MUI es la biblioteca de interfaz administrativa definida por la arquitectura.
 - La primera superficie incluye únicamente Clientes, Contratos, Planes, Facturación, Inventario, Servidores y Nodos.
@@ -42,7 +50,8 @@ Uso empresarial diario por áreas administrativas, cobranza, soporte y operació
 
 - Arquitectura y alcance: `/Users/diegoreyes/Downloads/ANALISIS_ARQUITECTURA_ERP_ISP_WISPRO.md`.
 - Logo oficial proporcionado por el usuario en formato JPEG.
-- No existen todavía datos reales, pantallas funcionales ni métricas que deban representarse.
+- Registro inicial, histórico: no existían todavía datos reales, pantallas funcionales ni métricas que debieran representarse.
+- Evidencia funcional actual: el monitor y sus ocho gráficas están documentados en `../../docs/MIKROTIK_MONITOR.md`, con validación local y SSH sintética identificada. La conexión a un router físico y la aceptación de producción permanecen pendientes.
 
 ## Product Principles
 

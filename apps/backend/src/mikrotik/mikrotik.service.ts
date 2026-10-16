@@ -14,6 +14,7 @@ import type {
   MikrotikSensorValue,
   MikrotikTelemetry,
 } from './mikrotik.types.js';
+import { counterRate, healthSensors } from './telemetry-metrics.js';
 
 type RawSnapshot = {
   capturedAt: number;
@@ -45,6 +46,7 @@ const emptyResource: MikrotikTelemetry['resource'] = {
 };
 
 const emptyHealth: MikrotikTelemetry['health'] = {
+  sensors: [],
   temperature: null,
   cpuTemperature: null,
   boardTemperature: null,
@@ -67,11 +69,7 @@ function sensor(
     const rawValue = source[key];
     const value = parseRouterOsNumber(rawValue);
     if (value === null) continue;
-    const detectedUnit = rawValue
-      .replace(String(value), '')
-      .replace('°', '')
-      .trim();
-    return { value, unit: detectedUnit || defaultUnit };
+    return { value, unit: defaultUnit };
   }
   return null;
 }
@@ -80,11 +78,22 @@ function sensor(
 export class MikrotikService {
   private previousSnapshot: RawSnapshot | null = null;
   private cachedTelemetry: { expiresAt: number; value: MikrotikTelemetry } | null = null;
+  private pending: Promise<MikrotikTelemetry> | null = null;
 
   async getTelemetry(): Promise<MikrotikTelemetry> {
     if (this.cachedTelemetry && this.cachedTelemetry.expiresAt > Date.now()) {
       return this.cachedTelemetry.value;
     }
+    // Share one read across dashboards/tabs. Avoid polling the router per viewer.
+    if (this.pending) return this.pending;
+    this.pending = this.readTelemetry().then((value) => {
+      this.cachedTelemetry = { expiresAt: Date.now() + 10_000, value };
+      return value;
+    }).finally(() => { this.pending = null; });
+    return this.pending;
+  }
+
+  private async readTelemetry(): Promise<MikrotikTelemetry> {
 
     const host = process.env.MIKROTIK_HOST?.trim();
     const username = process.env.MIKROTIK_USERNAME?.trim();
@@ -94,6 +103,7 @@ export class MikrotikService {
     const endpoint = host ? `${host}:${port}` : 'sin configurar';
 
     if (!host || !username || (!password && !privateKeyPath)) {
+      this.previousSnapshot = null;
       return this.emptyTelemetry(
         'configuration_required',
         'Configura host, usuario y una credencial de solo lectura en apps/backend/.env.',
@@ -102,6 +112,7 @@ export class MikrotikService {
     }
     const hostHash = process.env.MIKROTIK_SSH_HOST_HASH?.trim().toLowerCase();
     if (!hostHash || !/^[a-f0-9]{64}$/.test(hostHash) || !Number.isInteger(port) || port < 1 || port > 65535) {
+      this.previousSnapshot = null;
       return this.emptyTelemetry('configuration_required', 'Configura y verifica la huella SSH del equipo antes de conectar.', endpoint);
     }
 
@@ -118,9 +129,9 @@ export class MikrotikService {
         hostVerifier: (hash: string) => hash === hostHash,
       });
       const telemetry = this.normalizeSshOutputs(outputs, endpoint);
-      this.cachedTelemetry = { expiresAt: Date.now() + 4_000, value: telemetry };
       return telemetry;
     } catch (error) {
+      this.previousSnapshot = null;
       const message = error instanceof Error ? error.message : 'Error desconocido';
       const normalizedMessage = message.toLowerCase();
       const authenticationFailed = normalizedMessage.includes('authentication');
@@ -138,10 +149,12 @@ export class MikrotikService {
     return new Promise((resolve, reject) => {
       const connection = new Client();
       let settled = false;
+      const timeout = setTimeout(() => finishWithError(new Error('Tiempo de consulta agotado.')), 12_000);
 
       const finishWithError = (error: Error) => {
         if (settled) return;
         settled = true;
+        clearTimeout(timeout);
         connection.end();
         reject(error);
       };
@@ -152,11 +165,13 @@ export class MikrotikService {
             const [identity, resource, health, interfaces] = await Promise.all([
               this.execute(connection, ':put [/system identity get name]'),
               this.execute(connection, '/system resource print as-value'),
-              this.execute(connection, '/system health print as-value'),
+              // Some models do not expose /system health. Other metrics remain usable.
+              this.execute(connection, '/system health print as-value').catch(() => ''),
               this.execute(connection, '/interface print stats as-value'),
             ]);
             if (settled) return;
             settled = true;
+            clearTimeout(timeout);
             connection.end();
             resolve({ identity, resource, health, interfaces });
           } catch (error) {
@@ -164,6 +179,7 @@ export class MikrotikService {
           }
         })
         .once('error', finishWithError)
+        .once('close', () => { if (!settled) finishWithError(new Error('Conexión cerrada.')); })
         .connect(config);
     });
   }
@@ -180,9 +196,11 @@ export class MikrotikService {
         let stderr = '';
         stream.on('data', (chunk: Buffer) => {
           stdout += chunk.toString('utf8');
+          if (stdout.length > 1_048_576) { stream.close(); reject(new Error('Respuesta demasiado grande.')); }
         });
         stream.stderr.on('data', (chunk: Buffer) => {
           stderr += chunk.toString('utf8');
+          if (stderr.length > 8192) { stream.close(); reject(new Error('Respuesta de error demasiado grande.')); }
         });
         stream.once('close', (code: number | null) => {
           if (code && code !== 0) {
@@ -236,15 +254,17 @@ export class MikrotikService {
       },
       health: {
         ...emptyHealth,
+        sensors: healthSensors(health),
         temperature: sensor(health, ['temperature'], 'C'),
         cpuTemperature: sensor(health, ['cpu-temperature'], 'C'),
-        boardTemperature: sensor(health, ['board-temperature'], 'C'),
+        boardTemperature: sensor(health, ['board-temperature', 'board-temperature1', 'pcb-temperature'], 'C'),
         voltage: sensor(health, ['voltage'], 'V'),
         current: sensor(health, ['current'], 'A'),
         powerConsumption: sensor(health, ['power-consumption', 'power'], 'W'),
         fanSpeed: sensor(health, ['fan1-speed', 'fan-speed', 'fan2-speed'], 'RPM'),
       },
       traffic: {
+        ratesReady: interfaces.length > 0 && interfaces.every((item) => item.ratesReady),
         rxBitsPerSecond: interfaces.reduce((total, item) => total + item.rxBitsPerSecond, 0),
         txBitsPerSecond: interfaces.reduce((total, item) => total + item.txBitsPerSecond, 0),
         interfaces,
@@ -259,16 +279,13 @@ export class MikrotikService {
 
     return snapshot.interfaces.map((current) => {
       const previous = this.previousSnapshot?.interfaces.find((item) => item.name === current.name);
-      const rxBitsPerSecond = previous && elapsedSeconds
-        ? Math.max(0, ((current.rxBytes - previous.rxBytes) * 8) / elapsedSeconds)
-        : 0;
-      const txBitsPerSecond = previous && elapsedSeconds
-        ? Math.max(0, ((current.txBytes - previous.txBytes) * 8) / elapsedSeconds)
-        : 0;
+      const rxBitsPerSecond = counterRate(current.rxBytes, previous?.rxBytes, elapsedSeconds);
+      const txBitsPerSecond = counterRate(current.txBytes, previous?.txBytes, elapsedSeconds);
       return {
         ...current,
-        rxBitsPerSecond: Math.round(rxBitsPerSecond),
-        txBitsPerSecond: Math.round(txBitsPerSecond),
+        ratesReady: rxBitsPerSecond !== null && txBitsPerSecond !== null,
+        rxBitsPerSecond: rxBitsPerSecond ?? 0,
+        txBitsPerSecond: txBitsPerSecond ?? 0,
       };
     });
   }
@@ -287,7 +304,7 @@ export class MikrotikService {
       identity: null,
       resource: { ...emptyResource },
       health: { ...emptyHealth },
-      traffic: { rxBitsPerSecond: 0, txBitsPerSecond: 0, interfaces: [] },
+      traffic: { ratesReady: false, rxBitsPerSecond: 0, txBitsPerSecond: 0, interfaces: [] },
     };
   }
 }

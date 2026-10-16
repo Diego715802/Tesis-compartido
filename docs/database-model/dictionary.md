@@ -113,9 +113,9 @@ Generado del catálogo real: 67 tablas, 217 claves foráneas. No contiene regist
 - **crm.customers → service.contracts: 1:N** (vínculo obligatorio). FK `contracts_organization_id_customer_id_fkey`; organization_id, customer_id → organization_id, id.
 - **iam.organizations → service.contracts: 1:N** (vínculo obligatorio). FK `contracts_organization_id_fkey`; organization_id → id.
 - **billing.legal_entities → service.contracts: 1:N** (vínculo opcional). FK `contracts_organization_id_legal_entity_id_fkey`; organization_id, legal_entity_id → organization_id, id.
-- **network.nodes → service.contracts: 1:N** (vínculo obligatorio). FK `contracts_organization_id_node_id_fkey`; organization_id, node_id → organization_id, id.
+- **network.nodes → service.contracts: 1:N** (vínculo opcional). FK `contracts_organization_id_node_id_fkey`; organization_id, node_id → organization_id, id.
 - **catalog.service_plans → service.contracts: 1:N** (vínculo obligatorio). FK `contracts_organization_id_plan_id_fkey`; organization_id, plan_id → organization_id, id.
-- **network.servers → service.contracts: 1:N** (vínculo obligatorio). FK `contracts_organization_id_server_id_fkey`; organization_id, server_id → organization_id, id.
+- **network.servers → service.contracts: 1:N** (vínculo opcional). FK `contracts_organization_id_server_id_fkey`; organization_id, server_id → organization_id, id.
 - **iam.app_users → service.contracts: 1:N** (vínculo opcional). FK `contracts_updated_by_fkey`; updated_by → id.
 - **iam.app_users → service.contract_connections: 1:N** (vínculo opcional). FK `contract_connections_created_by_fkey`; created_by → id.
 - **service.contracts → service.contract_connections: 1:1** (vínculo obligatorio). FK `contract_connections_organization_id_contract_id_server_id_fkey`; organization_id, contract_id, server_id → organization_id, id, server_id.
@@ -776,7 +776,7 @@ RLS: true; FORCE: true. Planes: velocidades normalizadas a kbps; contador de con
 - CHECK (((upload_kbps >= 0) AND (download_kbps >= 0) AND (price >= (0)::numeric)))
 - CHECK ((cir_ratio > (0)::numeric))
 - CHECK ((currency ~ '^[A-Z]{3}$'::text))
-- CHECK (((frequency)::text = ANY ((ARRAY['monthly'::character varying, 'weekly'::character varying, 'daily'::character varying, 'annual'::character varying, 'once'::character varying])::text[])))
+- CHECK (((frequency)::text = ANY ((ARRAY['monthly'::character varying, 'bimonthly'::character varying, 'quarterly'::character varying, 'semiannual'::character varying, 'weekly'::character varying, 'daily'::character varying, 'annual'::character varying, 'once'::character varying])::text[])))
 - CHECK (((mikrotik_strategy)::text = ANY ((ARRAY['simple_queue'::character varying, 'queue_tree'::character varying, 'ppp_profile'::character varying, 'none'::character varying, 'pcq_queue_tree'::character varying, 'pcq_simple_queue'::character varying, 'cake_simple_queue'::character varying])::text[])))
 - CHECK ((btrim((name)::text) <> ''::text))
 - CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'inactive'::character varying])::text[])))
@@ -1015,7 +1015,7 @@ RLS: true; FORCE: true.
 | Columna | Tipo | Nulo | Clave |
 |---|---|---|---|
 | id | uuid | No | UQ, PK |
-| organization_id | uuid | No | UQ, FK, UQ |
+| organization_id | uuid | No | UQ, FK, UQ, UQ |
 | custom_id_suffix | character varying(32) | No | UQ |
 | custom_id | character varying(34) | Sí |  |
 | person_type | character varying(24) | No |  |
@@ -1034,12 +1034,14 @@ RLS: true; FORCE: true.
 | created_at | timestamp with time zone | No |  |
 | updated_at | timestamp with time zone | No |  |
 | deleted_at | timestamp with time zone | Sí |  |
+| workspace_key | character varying(100) | Sí | UQ |
 
 - CHECK ((((custom_id_suffix)::text = upper(btrim((custom_id_suffix)::text))) AND ((custom_id_suffix)::text ~ '^[A-Z0-9][A-Z0-9_-]{0,31}$'::text)))
 - CHECK ((btrim((display_name)::text) <> ''::text))
 - CHECK (((person_type)::text = ANY ((ARRAY['individual'::character varying, 'company'::character varying, 'other'::character varying])::text[])))
 - CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'inactive'::character varying, 'blocked'::character varying])::text[])))
 - CHECK ((version > 0))
+- CHECK (((workspace_key IS NULL) OR ((workspace_key)::text ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$'::text)))
 
 ### documents.files
 
@@ -1755,11 +1757,11 @@ RLS: true; FORCE: true.
 | Columna | Tipo | Nulo | Clave |
 |---|---|---|---|
 | id | uuid | No | UQ, UQ, UQ, PK |
-| organization_id | uuid | No | FK, FK, FK, UQ, UQ, UQ, FK, FK, FK, UQ, FK |
+| organization_id | uuid | No | FK, FK, FK, UQ, UQ, UQ, FK, FK, FK, UQ, FK, UQ |
 | customer_id | uuid | No | FK, UQ |
 | plan_id | uuid | No | FK |
-| server_id | uuid | No | UQ, FK |
-| node_id | uuid | No | FK |
+| server_id | uuid | Sí | UQ, FK |
+| node_id | uuid | Sí | FK |
 | serial_number | character varying(120) | No | UQ |
 | status | character varying(24) | No |  |
 | price | numeric(14,2) | No |  |
@@ -1784,17 +1786,19 @@ RLS: true; FORCE: true.
 | updated_by | uuid | Sí | FK |
 | version | integer | No |  |
 | deleted_at | timestamp with time zone | Sí |  |
+| workspace_key | character varying(100) | Sí | UQ |
 
 - CHECK (((billing_day >= 1) AND (billing_day <= 31)))
 - CHECK (((price >= (0)::numeric) AND (currency ~ '^[A-Z]{3}$'::text)))
 - CHECK (((billing_period_start IS NULL) OR (billing_period_end IS NULL) OR (billing_period_end >= billing_period_start)))
 - CHECK (((NOT cable_modem_enabled) OR (btrim((COALESCE(cable_modem_code, ''::character varying))::text) <> ''::text)))
-- CHECK (((frequency)::text = ANY ((ARRAY['monthly'::character varying, 'weekly'::character varying, 'daily'::character varying, 'annual'::character varying, 'once'::character varying])::text[])))
+- CHECK (((frequency)::text = ANY ((ARRAY['monthly'::character varying, 'bimonthly'::character varying, 'quarterly'::character varying, 'semiannual'::character varying, 'weekly'::character varying, 'daily'::character varying, 'annual'::character varying, 'once'::character varying])::text[])))
 - CHECK (((latitude IS NULL) OR ((latitude >= ('-90'::integer)::numeric) AND (latitude <= (90)::numeric))))
 - CHECK (((longitude IS NULL) OR ((longitude >= ('-180'::integer)::numeric) AND (longitude <= (180)::numeric))))
 - CHECK ((btrim((serial_number)::text) <> ''::text))
 - CHECK (((status)::text = ANY ((ARRAY['enabled'::character varying, 'disabled'::character varying, 'alerted'::character varying, 'degraded'::character varying, 'suspended'::character varying])::text[])))
 - CHECK ((version > 0))
+- CHECK (((workspace_key IS NULL) OR ((workspace_key)::text ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$'::text)))
 
 ### support.tickets
 

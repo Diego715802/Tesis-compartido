@@ -223,10 +223,10 @@ Fuentes: `features/servidores/*`, `features/nodos/*`, `components/maps/google-ma
 | Acción/control | Efecto observado | Modelo / pendiente |
 |---|---|---|
 | Servidores: pestañas MikroTik/BMU | Cambia vista React | `network.servers.kind` |
-| MikroTik: carga/polling cada 5 s | GET `/api/mikrotik/telemetry`; Next consulta Nest; historia en memoria cuando state connected | Consulta real de solo lectura; configuración/env y equipo determinan resultado |
-| MikroTik: Actualizar ahora | Repite consulta | No cambia router ni contratos |
-| MikroTik: Configuración segura | Dialog de variables backend y recomendación de usuario lectura | No guardar secretos en frontend; texto de guía requiere configuración real |
-| MikroTik: métricas/gráficos/interfaces | Muestra respuesta y hasta 360 muestras en memoria | Historial persistente y retención pendiente |
+| MikroTik: carga/polling cada 15 s | GET `/api/mikrotik/telemetry`; Next consulta Nest; hasta 360 muestras en memoria, huecos sin lectura; pestaña visible | Backend comparte consulta SSH y caché de 10 s; configuración/env y equipo determinan resultado |
+| MikroTik: Actualizar / Pausar / Reanudar | Controla consulta de solo lectura; ventanas de 15/30/90 min | No cambia router ni contratos; no fabrica métricas |
+| MikroTik: Requisitos para conectar el equipo | Desplegable con vínculo por organización, cuenta de lectura y huella SSH | Variables solo en backend; guía técnica en `docs/MIKROTIK_MONITOR.md` |
+| MikroTik: ocho gráficos/interfaces | ECharts, mapa sensores×tiempo, unidades separadas, controles HTML de zoom/restauración/PNG | Historial persistente pendiente; capturas de QA sintética identificada; hardware físico aún no validado |
 | BMU: buscar/crear/editar/eliminar/exportar/seleccionar/tamaño/filtros | Mismo workbench de demostración de inventario | Sin SSH/API BMU conectado |
 | BMU: Básico | Nombre, host, puerto, estado | Servers |
 | BMU: Conexión | Token/usuario, clave, SSL | 007 solo `credential_reference`; backend debe resolver secreto y exigir TLS según entorno |

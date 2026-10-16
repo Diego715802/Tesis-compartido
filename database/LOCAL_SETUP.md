@@ -1,5 +1,7 @@
 # Base local ComeCore
 
+> Actualización 16/10/2026: el modelo actual incluye autenticación y dominios ERP. Para el recorrido conectado y las migraciones 012–014, consultar `docs/CONNECTED_WORKFLOW.md`. Las cifras iniciales de tablas descritas más abajo son históricas; el catálogo actual conserva 67 tablas y 217 FK.
+
 > Estado actualizado el 14 de octubre de 2026: el modelo tiene 67 tablas, 217 FK y autenticación real. Las cifras iniciales siguientes son históricas. Consultar `docs/obsidian/ComeCore/11-Modelo-ERP-Completo.md` y `12-Seguridad-y-Verificacion.md` para alcance actual, roles y pruebas. Para nuevas migraciones usar `scripts/apply-database-migration.cjs`; la restauración ahora verifica todas las tablas de aplicación.
 
 PostgreSQL **18.6**, distribuido por Postgres.app, ejecuta la base `comecore` en esta

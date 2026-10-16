@@ -57,6 +57,19 @@ describe('Secure workspace API', () => {
   });
   afterEach(async () => { await server.close(); });
 
+  it('allows a billing price change when optional device records and secrets are absent', async () => {
+    const customer = fixture();
+    delete customer.deviceRecords;
+    delete customer.contracts[0].password;
+    delete customer.contracts[0].wifiPassword;
+    expect((await write([customer])).statusCode).toBe(200);
+    identity!.role = 'billing';
+    identity!.permissions = ['clientes:read','clientes:write','facturacion:write'];
+    const saved = await read();
+    saved.customers[0].contracts[0].price = 12;
+    expect((await write(saved.customers, saved.version)).statusCode).toBe(200);
+  });
+
   it('starts empty; persists authenticated ciphertext and server authorship', async () => {
     expect(await read()).toEqual({ customers: [], version: 0 });
     const response = await write([fixture()]);

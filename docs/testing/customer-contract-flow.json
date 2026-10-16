@@ -1,0 +1,151 @@
+{
+  "timestamp": "2026-10-16T16:43:51.625Z",
+  "environment": "local",
+  "transport": "HTTP real → Next BFF → backend → PostgreSQL",
+  "results": [
+    {
+      "label": "API pública sin sesión devuelve 401",
+      "passed": true
+    },
+    {
+      "label": "Cinco operadores ficticios completan contraseña y MFA reales sin imprimir secretos",
+      "passed": true
+    },
+    {
+      "label": "Alta del cliente ficticio por HTTP y nueva consulta conservan sus datos",
+      "passed": true
+    },
+    {
+      "label": "Plan y código de producto creados y recuperados desde PostgreSQL",
+      "passed": true
+    },
+    {
+      "label": "Nombre de plan duplicado, incluso cambiando mayúsculas, rechazado",
+      "passed": true
+    },
+    {
+      "label": "Velocidad negativa rechazada",
+      "passed": true
+    },
+    {
+      "label": "Viewer, soporte y facturación no crean planes",
+      "passed": true
+    },
+    {
+      "label": "Catálogo aislado por organización",
+      "passed": true
+    },
+    {
+      "label": "Contrato asociado al cliente conserva ID de plan, precio ficticio, día de pago y auditoría servidor",
+      "passed": true
+    },
+    {
+      "label": "Lectura independiente en PostgreSQL confirma snapshot cifrado y vínculo con la organización",
+      "passed": true
+    },
+    {
+      "label": "Una escritura con versión obsoleta se rechaza con 409",
+      "passed": true
+    },
+    {
+      "label": "Precio negativo manipulado se rechaza en servidor",
+      "passed": true
+    },
+    {
+      "label": "Contrato duplicado manipulado se rechaza en servidor",
+      "passed": true
+    },
+    {
+      "label": "Cuenta de solo lectura no modifica cliente ni contrato",
+      "passed": true
+    },
+    {
+      "label": "Cuenta de solo lectura sí consulta su organización",
+      "passed": true
+    },
+    {
+      "label": "Otra organización no ve el cliente al manipular el parámetro de organización",
+      "passed": true
+    },
+    {
+      "label": "Cambio desde origen ajeno se rechaza",
+      "passed": true
+    },
+    {
+      "label": "Los intentos rechazados no alteran la versión ni el estado guardado",
+      "passed": true
+    },
+    {
+      "label": "Cerrar sesión invalida incluso la cookie copiada antes del cierre",
+      "passed": true
+    },
+    {
+      "label": "Una sesión nueva con MFA recupera cliente y contrato desde PostgreSQL",
+      "passed": true
+    },
+    {
+      "label": "JOIN real confirma cliente → contrato → plan, sin inventar asignación de router o nodo",
+      "passed": true
+    },
+    {
+      "label": "Contador de contratos del plan procede de su relación SQL",
+      "passed": true
+    },
+    {
+      "label": "Plan ajeno rechazado y transacción revertida también en las tablas normalizadas",
+      "passed": true
+    },
+    {
+      "label": "Facturación modifica precio autorizado sin privilegios de crear cliente o contrato",
+      "passed": true
+    },
+    {
+      "label": "Periodo bimestral y estado Exento se conservan al guardar y consultar",
+      "passed": true
+    },
+    {
+      "label": "Soporte actualiza notas, pero no modifica el precio",
+      "passed": true
+    },
+    {
+      "label": "Dos escrituras simultáneas: una confirma y la obsoleta se rechaza sin pérdida silenciosa",
+      "passed": true
+    },
+    {
+      "label": "La consulta usa el catálogo relacionado y no la etiqueta antigua de la extensión cifrada",
+      "passed": true
+    },
+    {
+      "label": "Archivar conserva filas e historial, retira el expediente y recalcula el contador de contratos",
+      "passed": true
+    },
+    {
+      "label": "Un alta no puede reutilizar silenciosamente el identificador de un cliente archivado",
+      "passed": true
+    },
+    {
+      "label": "Un expediente cifrado anterior sigue siendo consultable sin importación implícita",
+      "passed": true
+    },
+    {
+      "label": "Sin un plan registrado se conserva intacto el expediente anterior",
+      "passed": true
+    },
+    {
+      "label": "Un guardado explícito conecta el expediente anterior al plan registrado sin cambiar su identificador",
+      "passed": true
+    },
+    {
+      "label": "Organizaciones, cuentas, sesiones y datos ficticios retirados y ausencia comprobada",
+      "passed": true
+    }
+  ],
+  "cleanup": true,
+  "limitations": [
+    "Campos técnicos y operativos complementarios permanecen en la extensión cifrada; este recorrido conecta el núcleo de clientes, planes y contratos.",
+    "Asignación y aprovisionamiento de equipos de red no se simulan ni se activan.",
+    "No es un recorrido de clicks en navegador ni una aceptación de producción."
+  ],
+  "normalized_linkage": "verified_customer_contract_plan",
+  "status": "passed"
+}

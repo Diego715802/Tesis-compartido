@@ -7,6 +7,8 @@ estado: aplicado-y-probado-localmente
 
 # Modelo completo del ERP actual
 
+Actualización del 16/10/2026: [[Bitacora/2026-10-16-Persistencia-Relacional|Integración relacional de clientes, planes y contratos]]. Las cifras del catálogo se mantienen; las migraciones 012 a 014 conectan el núcleo y conservan campos complementarios cifrados.
+
 Se amplió **la base PostgreSQL `comecore` existente**, con 67 tablas en 15 esquemas y 217 claves foráneas. Se conservaron las migraciones anteriores y los módulos originales. No se necesitan bases independientes por pantalla: compartir organización, cliente, contrato y permisos permite mantener la integridad de sus relaciones.
 
 66 tablas tienen RLS y FORCE RLS. La excepción es `app_private.schema_migrations`: es un historial técnico privado sin permisos para el runtime. Las tablas de autenticación tienen políticas de servicio; las de negocio verifican organización y membresía. La cifra de RLS no significa que cualquier cuenta de servicio quede aislada automáticamente: los pools de autenticación y datos tienen funciones y privilegios diferentes.
@@ -60,8 +62,9 @@ Todas constan en el historial con SHA-256. Las pruebas de dominio se ejecutan en
 | Superficie | Implementación comprobada | Pendiente concreto |
 |---|---|---|
 | Login, MFA, sesiones y permisos | Better Auth con PostgreSQL, guardas servidor y pruebas negativas | Aceptación del entorno público, SMTP, TLS y operación de altas/recuperación administrativa |
-| Clientes y contratos | Snapshot cifrado en `erp.customer_workspaces`; validación y control de versión servidor | Migración transaccional del snapshot a tablas CRM/servicio y APIs por entidad |
-| Planes, nodos, BMU e inventario | Modelo SQL con restricciones y RLS probado; formularios mantienen su comportamiento demo | Repositorios, endpoints y UI conectados; paginación, transacciones y validación por operación |
+| Clientes y contratos | Núcleo CRM/servicio conectado, plan_id real y consultas SQL; extensión cifrada para campos complementarios; versión y guardado atómico | Conectar entidades operativas complementarias y comprobar recorridos de navegador actuales |
+| Planes | Catálogo y códigos de producto conectados a PostgreSQL; alta/listado por API, selección en contrato y contadores SQL | Pruebas visuales actualizadas y futuras operaciones de edición de catálogo |
+| Nodos, BMU e inventario | Modelo SQL con restricciones y RLS; varias pantallas siguen demo | Repositorios, endpoints y UI conectados por módulo; no se declaran terminados por conectar clientes |
 | Facturación importada | Comprobantes visibles de demostración; modelo facturas/pagos/asignaciones/recibos existente | API de recibos y almacenamiento privado; flujos contables; proveedores fiscales y de cobro |
 | CMC | Integración anterior mediante bridge privado y archivos cifrados | Adaptar esa persistencia al nuevo modelo CMS antes de afirmar que usa las tablas nuevas |
 | Archivos | Metadatos, límites, propósito y cuarentena SQL | Servicio de upload privado, validación del contenido, antivirus y descarga autorizada |

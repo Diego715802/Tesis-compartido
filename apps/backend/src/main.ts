@@ -9,6 +9,7 @@ import helmet from '@fastify/helmet';
 import { securityConfig } from './security/config.js';
 import { createSecurityRuntime } from './security/runtime.js';
 import { registerWorkspaceRoutes } from './workspace/workspace-routes.js';
+import { registerPlanRoutes } from './workspace/plan-routes.js';
 import { fromNodeHeaders } from 'better-auth/node';
 import { cmcConnection } from './cmc/cmc-config.js';
 import { registerCmcRoutes } from './cmc/cmc-routes.js';
@@ -26,6 +27,8 @@ async function bootstrap() {
     referrerPolicy: { policy: 'no-referrer' }, frameguard: { action: 'deny' } });
   await security.register(server);
   registerWorkspaceRoutes(server, { resolveIdentity: incoming => security.resolveIdentity(fromNodeHeaders(incoming)),
+    withOrganizationTransaction: security.withOrganizationTransaction, workspaceKey: config.workspaceKey, relational: true });
+  registerPlanRoutes(server, { resolveIdentity: incoming => security.resolveIdentity(fromNodeHeaders(incoming)),
     withOrganizationTransaction: security.withOrganizationTransaction, workspaceKey: config.workspaceKey });
   registerCmcRoutes(server, { resolveIdentity: incoming => security.resolveIdentity(fromNodeHeaders(incoming)),
     origin: config.origin, connection: cmcConnection() });

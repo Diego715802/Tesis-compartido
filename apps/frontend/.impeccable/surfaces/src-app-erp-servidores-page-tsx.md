@@ -26,7 +26,7 @@ Constraints: hereda el lenguaje visual compacto de ComeCore; ECharts; consulta d
 
 **STORY:** El operador ve primero si la conexión es real y de solo lectura, después reconoce qué sensores existen, inspecciona su evolución y finalmente identifica la interfaz que concentra el tráfico.
 
-**FIRST VIEWPORT:** Encabezado de módulo y estado; franja tabular de mediciones; gráfica temporal dominante a la izquierda y contexto del equipo a la derecha; el detalle de interfaces y el mapa térmico continúan debajo.
+**FIRST VIEWPORT:** Encabezado de monitor y estado; franja tabular de lecturas reales cuando existe conexión; pausa/actualización y ventana de tiempo; primera fila CPU/memoria y tráfico RX/TX. Ocho gráficas en dos columnas en escritorio y una en móvil; contexto del equipo e interfaces en un desplegable inferior. Los gráficos ofrecen controles HTML de zoom, restauración y PNG con acceso por teclado.
 
 **FORM:** Extensión directa de la superficie establecida de Servidores. Semilla `inherited-servidores-operate`; la interacción distintiva es la actualización periódica con historial acumulado y zoom temporal de ECharts.
 

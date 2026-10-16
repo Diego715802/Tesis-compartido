@@ -6,13 +6,14 @@ fecha: 2026-10-14
 
 # ComeCore — documentación técnica
 
-Estado actual verificado localmente el **14 de octubre de 2026**. Las notas iniciales del 9 y 11 de octubre se conservan como historia: sus cifras de tablas, login visual y dominios planeados fueron superadas por la implementación siguiente.
+Estado del modelo y del recorrido cliente/plan/contrato actualizado localmente el **16 de octubre de 2026**. Las otras superficies conservan su fecha de verificación indicada en sus notas. Las notas iniciales del 9 y 11 de octubre se conservan como historia: sus cifras de tablas, login visual y dominios planeados fueron superadas por la implementación siguiente.
 
 - [[11-Modelo-ERP-Completo|Modelo PostgreSQL completo y persistencia actual]]
 - [[Modelo/00-Relaciones|Diagramas por dominio: uno a uno, uno a muchos y tablas intermedias]]
 - [[Modelo/Diccionario|Diccionario de todas las tablas y claves foráneas]]
 - [[12-Seguridad-y-Verificacion|Controles de seguridad, pruebas y pendientes públicos]]
 - [[13-Cobertura-de-Acciones|Acciones revisadas y límites de la evidencia]]
+- [[Bitacora/2026-10-16-Graficas-MikroTik|Gráficas de red y mapa de temperatura]]
 - [[08-Diagramas-DBeaver|DBeaver y visor interactivo]]
 - [[07-Control-Tecnico-Migraciones|Migraciones y checksums]]
 - [[10-Sitio-Web-CMC|Sitio web y contenido: integración CMC local]]
@@ -27,11 +28,14 @@ Estado actual verificado localmente el **14 de octubre de 2026**. Las notas inic
 
 ## Estado comprobado
 
+Última integración: [[Bitacora/2026-10-16-Persistencia-Relacional|Clientes, planes y contratos conectados]], 16/10/2026. La nota [[Bitacora/2026-10-16-Cliente-Ficticio|Prueba inicial con cliente ficticio]] conserva el estado previo al cambio.
+
 | Elemento | Estado |
 |---|---|
 | Base local | PostgreSQL 18.6, `comecore`: 67 tablas, 15 esquemas, 217 FK; 66 tablas FORCE RLS y un historial técnico privado. |
 | Autenticación | Better Auth conectado; MFA, sesiones y permisos servidor. 33 controles de integración aprobados; infraestructura pública pendiente. |
-| Clientes/contratos | Snapshot cifrado en PostgreSQL; adaptación al modelo relacional pendiente. |
+| Clientes/planes/contratos | Núcleo relacional conectado por API y FK por organización; campos complementarios en extensión cifrada. Pruebas HTTP/SQL y conservación de legado verificadas. |
+| Monitor de red | Ocho gráficas ECharts en Paneles de Control/Servidores, lector SSH y permisos. QA sintética identificada; router físico e histórico persistente pendientes. |
 | Otros módulos | Modelo SQL aplicado; varias pantallas aún usan datos demo y requieren APIs transaccionales. |
 | Diagramas | Visor local con filtros/zoom/detalle, 12 nuevos ERD DBeaver y 15 diagramas Mermaid por esquema. Se conservaron los tres ERD originales. |
 | Seguridad SQL | Pruebas reales de RLS, permisos, relaciones cruzadas, actor y auditoría, con ROLLBACK. |

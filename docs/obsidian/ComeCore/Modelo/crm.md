@@ -46,7 +46,7 @@ erDiagram
 - **crm.customer_contacts**: 10 columnas; RLS forzado.
 - **crm.customer_devices**: 11 columnas; RLS forzado.
 - **crm.customer_payment_gateways**: 9 columnas; RLS forzado.
-- **crm.customers**: 20 columnas; RLS forzado.
+- **crm.customers**: 21 columnas; RLS forzado.
 
 ## Cardinalidades de negocio
 

@@ -1,6 +1,6 @@
 # Relaciones implementadas de ComeCore
 
-Catálogo PostgreSQL: 67 tablas, 217 FK. Extracción: 2026-10-14T19:12:43.359Z.
+Catálogo PostgreSQL: 67 tablas, 217 FK. Extracción: 2026-10-16T16:39:03.296Z.
 
 Los diagramas de cada dominio ocultan enlaces repetidos de organización/autoría para facilitar la lectura. El diccionario y el visor permiten consultar todas las FK. No contienen registros ni secretos.
 

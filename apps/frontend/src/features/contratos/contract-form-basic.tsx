@@ -23,7 +23,7 @@ export function ContractBasicForm(props: Props) {
       <Box sx={{ ...formGrid, mt: 1.75 }}>
         <ContractField {...props} name="serialNumber" label="Número de serie del contrato" required />
         <ContractField {...props} name="status" label="Estado" choices={["Habilitado", "Deshabilitado", "Alertado", "Degradado", ...(contract.status === "Suspendido" ? ["Suspendido"] : [])]} />
-        <ContractField {...props} name="plan" label="Plan" required choices={options.plans} onChange={(patch) => { const existing = customers.flatMap((customer) => customer.contracts).find((item) => item.plan === patch.plan); onChange({ ...patch, ...(existing?.price !== undefined ? { price: existing.price } : {}) }); }} />
+        <ContractField {...props} name="plan" label="Plan" required choices={options.plans} />
         <ContractField {...props} name="server" label="Servidor" required choices={options.servers} onChange={(patch) => { const nextOptions = contractFormOptions(customers, patch.server ?? ""); onChange({ ...patch, ...(nextOptions.interfaces.includes(contract.interfaceName ?? "") ? {} : { interfaceName: "" }) }); }} />
         <ContractField {...props} name="node" label="Nodo Wireless" required choices={options.nodes} />
         <ContractOptionField {...props} name="interfaceName" label="Interfaz" required options={options.interfaces} />

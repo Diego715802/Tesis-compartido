@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-16",
+  "scope": "Núcleo relacional cliente/plan/contrato",
+  "http_flow": {
+    "status": "passed",
+    "checks": 34,
+    "cleanup": true,
+    "report": "docs/testing/customer-contract-flow.json"
+  },
+  "builds": {
+    "backend": "passed",
+    "frontend": "passed"
+  },
+  "backend_tests": {
+    "files": 8,
+    "passed": 68
+  },
+  "frontend_boundary_tests": {
+    "files": 2,
+    "passed": 2
+  },
+  "sql_checks": "007 + 008 passed; ROLLBACK",
+  "lint": {
+    "frontend_changed_files": "passed without warnings",
+    "backend": "exit 0; three preexisting warnings, no warnings in new relational/plan code"
+  },
+  "database": {
+    "tables": 67,
+    "schemas": 15,
+    "foreign_keys": 217,
+    "forced_rls_tables": 66,
+    "new_migrations": [
+      "012_connected_customer_workflow.sql",
+      "013_audit_deleted_customer_reference.sql",
+      "014_contract_billing_periods.sql"
+    ]
+  },
+  "backup_restore": "passed before migrations and after 014; private backups outside repository",
+  "browser_click_walkthrough": "not performed in this iteration",
+  "public_production_acceptance": "pending"
+}

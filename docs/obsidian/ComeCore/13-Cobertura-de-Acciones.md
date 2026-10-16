@@ -7,6 +7,8 @@ estado: revision-estatica-y-recorridos-locales
 
 # Acciones del ERP: alcance comprobado
 
+Actualización de persistencia del 16/10/2026: [[Bitacora/2026-10-16-Persistencia-Relacional]]. Se comprobó la integración por HTTP y SQL; el inventario de clicks siguiente conserva sus recorridos de navegador anteriores.
+
 Se revisaron 71 archivos actuales, con **667 controles con eventos y 248 campos** mediante AST TypeScript. El índice `docs/database-model/actions.md` identifica módulo, control, handler y línea; `actions.json` permite repetir el análisis con `node scripts/inventory-erp-actions.cjs`. Incluye componentes reutilizados y código conservado que ya no se renderiza: no equivale a 667 clicks ejecutados.
 
 [[09-Inventario-Funcional-ERP]] conserva el análisis histórico de campos y reglas. El ZIP importado el 12 de octubre sustituyó Inventario y Facturación: actualmente Inventario muestra Stock/Artículos y Facturación Comprobantes de Pago. Las rutas de otras vistas de facturación redirigen, después de validar permisos. Sus tablas siguen siendo útiles para los próximos flujos contables.
@@ -17,9 +19,9 @@ Se revisaron 71 archivos actuales, con **667 controles con eventos y 248 campos*
 |---|---|---|
 | Acceso | Login, desafío MFA y código de respaldo; repetido el 14 de octubre con cuenta aislada | Autenticación y MFA reales; no se usaron contraseñas de usuarios reales |
 | Paneles | Básico/Facturación/Servidores y navegación | Indicadores demo |
-| Clientes | Filtros y limpiar; alta sintética; Básico/Facturación/Pasarela; panel Detalle/Consumo/Mapa/Pagos/App/Auditoría; movimientos | Snapshot PostgreSQL comprobado; se corrigió el crash de fechas ISO. Mapa externo y portal sin verificar como servicios operativos |
+| Clientes | Filtros y limpiar; alta sintética; Básico/Facturación/Pasarela; panel Detalle/Consumo/Mapa/Pagos/App/Auditoría; movimientos | Núcleo CRM conectado el 16/10 por HTTP/SQL; extensión cifrada para campos complementarios. Mapa externo y portal siguen sin verificar como servicios operativos |
 | Contratos | Columnas; nuevo y validación vacía; Básico/Facturación/Avanzado; PPPoE/DHCP; opciones OLT | Sin aprovisionar red ni guardar credenciales de equipos |
-| Planes | Listado y alta Básico/MikroTik/Código de producto | Estado React; sin insertar un plan real |
+| Planes | Recorrido de navegador previo: Listado y alta Básico/MikroTik/Código de producto | Desde el 16/10: API y PostgreSQL reales, códigos y contador por relación. Comprobado por HTTP; revalidación de clicks pendiente |
 | Nodos | Coberturas, SSID/amplitud/artículo; paginación y tamaño de página | Datos demo; cobertura geográfica/radio no medida |
 | Servidores | MikroTik sin configurar; configuración segura; BMU Básico/Conexión/Avanzado | No se conectó un router real; formulario BMU demo |
 | Inventario | Stock; agregar filas producto/serie/MAC; Artículos, estado, selección y actualización masiva; detalle | Cambios solo en memoria; el alta heredada de artículos no persiste filas individuales. Antes de conectar debe sustituirse por una transacción validada |

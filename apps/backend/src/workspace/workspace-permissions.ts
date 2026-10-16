@@ -59,11 +59,11 @@ function preserveHiddenSecrets(customer: WorkspaceCustomer, previous: WorkspaceC
   if (canReadNetworkSecrets(identity)) return customer;
   return {
     ...customer,
-    deviceRecords: customer.deviceRecords?.map((device) => {
+    ...(customer.deviceRecords ? { deviceRecords: customer.deviceRecords.map((device) => {
       if (device.pushToken) throw forbidden();
       const existing = previous?.deviceRecords?.find((item) => item.id === device.id);
       return { ...device, pushToken: existing?.pushToken ?? '' };
-    }),
+    }) } : {}),
     contracts: customer.contracts.map((contract) => {
       if (contract.password || contract.wifiPassword) throw forbidden();
       const existing = previous?.contracts.find((item) => item.id === contract.id);

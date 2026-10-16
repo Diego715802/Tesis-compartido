@@ -46,3 +46,29 @@ Estas verificaciones no sustituyen una auditoría de seguridad completa ni la ac
 Conectar GitHub o configurar autenticación de Git en la Mac; después verificar el head remoto y subir sin forzar ni sobrescribir cambios ajenos. No se solicita compartir contraseñas ni tokens por chat.
 
 Sincronización Obsidian: 40 archivos sincronizados en la bóveda existente, sin eliminar notas ni conflictos.
+
+## Actualización del avance: flujo relacional y monitor MikroTik
+
+Nueva solicitud del usuario del 16 de octubre: actualizar este mismo repositorio
+con el trabajo posterior. Se incluyen las migraciones adicionales 012–014, el
+flujo relacional de clientes/planes/contratos, las ocho gráficas MikroTik, pruebas,
+diagramas vigentes, capturas de QA identificadas y sus guías. No se aplica SQL ni se
+publica un servicio de Internet por esta operación Git.
+
+Verificación previa al commit: `git diff --check` correcto; `.env` reales ignorados;
+revisión de 238 blobs de commits locales aún no publicados y 361 rutas candidatas
+sin coincidencias con secretos locales ni patrones de claves privadas/tokens de
+proveedor. Es una comprobación específica, no una garantía de ausencia universal
+de secretos. Las credenciales sintéticas de QA se generaron fuera del repositorio
+y ya se retiraron; los scripts de prueba contienen únicamente su generación.
+
+La evidencia del avance está en las bitácoras de Persistencia Relacional y Gráficas
+MikroTik: 34 controles del recorrido HTTP/SQL, 73 pruebas backend, 13 frontend,
+compilaciones y 18 controles de frontera HTTP. Hardware físico y aceptación pública
+continúan pendientes.
+
+El remoto sigue en `ff8f0b75441280ff06cbe965a72820647acf2039`. En esta solicitud se
+volvió a comprobar `git push --dry-run`: Git no dispone de usuario/credenciales
+HTTPS; el conector GitHub devuelve sesión desconectada. Se guarda el avance en
+Git local y se prepara la conexión oficial. No se presenta como una subida
+remota completada; no se fuerza el remoto ni se solicitan tokens por chat.

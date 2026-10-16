@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-14T19:12:43.359Z",
+  "generated_at": "2026-10-16T16:39:03.296Z",
   "database": "comecore",
   "tables": [
     {
@@ -8825,7 +8825,7 @@
           "definition": "NOT NULL download_kbps"
         },
         {
-          "oid": 22437,
+          "oid": 44361,
           "name": "service_plans_frequency_check",
           "child_oid": 22415,
           "parent_oid": 0,
@@ -8834,7 +8834,7 @@
             8
           ],
           "parent_keys": null,
-          "definition": "CHECK (((frequency)::text = ANY ((ARRAY['monthly'::character varying, 'weekly'::character varying, 'daily'::character varying, 'annual'::character varying, 'once'::character varying])::text[])))"
+          "definition": "CHECK (((frequency)::text = ANY ((ARRAY['monthly'::character varying, 'bimonthly'::character varying, 'quarterly'::character varying, 'semiannual'::character varying, 'weekly'::character varying, 'daily'::character varying, 'annual'::character varying, 'once'::character varying])::text[])))"
         },
         {
           "oid": 22448,
@@ -9130,6 +9130,12 @@
           "table_name": "service_plans",
           "indexname": "service_plans_created_by_fk_idx",
           "indexdef": "CREATE INDEX service_plans_created_by_fk_idx ON catalog.service_plans USING btree (created_by)"
+        },
+        {
+          "schema": "catalog",
+          "table_name": "service_plans",
+          "indexname": "service_plans_name_folded_unique",
+          "indexdef": "CREATE UNIQUE INDEX service_plans_name_folded_unique ON catalog.service_plans USING btree (organization_id, lower(btrim((name)::text)))"
         },
         {
           "schema": "catalog",
@@ -12744,6 +12750,13 @@
           "name": "deleted_at",
           "type": "timestamp with time zone",
           "not_null": false
+        },
+        {
+          "table_oid": 16475,
+          "attnum": 21,
+          "name": "workspace_key",
+          "type": "character varying(100)",
+          "not_null": false
         }
       ],
       "constraints": [
@@ -13018,6 +13031,31 @@
           ],
           "parent_keys": null,
           "definition": "CHECK ((version > 0))"
+        },
+        {
+          "oid": 44339,
+          "name": "customers_workspace_key_check",
+          "child_oid": 16475,
+          "parent_oid": 0,
+          "type": "c",
+          "child_keys": [
+            21
+          ],
+          "parent_keys": null,
+          "definition": "CHECK (((workspace_key IS NULL) OR ((workspace_key)::text ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$'::text)))"
+        },
+        {
+          "oid": 44336,
+          "name": "customers_workspace_key_unique",
+          "child_oid": 16475,
+          "parent_oid": 0,
+          "type": "u",
+          "child_keys": [
+            2,
+            21
+          ],
+          "parent_keys": null,
+          "definition": "UNIQUE (organization_id, workspace_key)"
         }
       ],
       "policies": [
@@ -13103,6 +13141,12 @@
           "table_name": "customers",
           "indexname": "customers_updated_by_idx",
           "indexdef": "CREATE INDEX customers_updated_by_idx ON crm.customers USING btree (updated_by) WHERE (updated_by IS NOT NULL)"
+        },
+        {
+          "schema": "crm",
+          "table_name": "customers",
+          "indexname": "customers_workspace_key_unique",
+          "indexdef": "CREATE UNIQUE INDEX customers_workspace_key_unique ON crm.customers USING btree (organization_id, workspace_key)"
         }
       ]
     },
@@ -24633,14 +24677,14 @@
           "attnum": 5,
           "name": "server_id",
           "type": "uuid",
-          "not_null": true
+          "not_null": false
         },
         {
           "table_oid": 23518,
           "attnum": 6,
           "name": "node_id",
           "type": "uuid",
-          "not_null": true
+          "not_null": false
         },
         {
           "table_oid": 23518,
@@ -24809,6 +24853,13 @@
           "name": "deleted_at",
           "type": "timestamp with time zone",
           "not_null": false
+        },
+        {
+          "table_oid": 23518,
+          "attnum": 31,
+          "name": "workspace_key",
+          "type": "character varying(100)",
+          "not_null": false
         }
       ],
       "constraints": [
@@ -24950,7 +25001,7 @@
           "definition": "NOT NULL customer_id"
         },
         {
-          "oid": 23537,
+          "oid": 44360,
           "name": "contracts_frequency_check",
           "child_oid": 23518,
           "parent_oid": 0,
@@ -24959,7 +25010,7 @@
             11
           ],
           "parent_keys": null,
-          "definition": "CHECK (((frequency)::text = ANY ((ARRAY['monthly'::character varying, 'weekly'::character varying, 'daily'::character varying, 'annual'::character varying, 'once'::character varying])::text[])))"
+          "definition": "CHECK (((frequency)::text = ANY ((ARRAY['monthly'::character varying, 'bimonthly'::character varying, 'quarterly'::character varying, 'semiannual'::character varying, 'weekly'::character varying, 'daily'::character varying, 'annual'::character varying, 'once'::character varying])::text[])))"
         },
         {
           "oid": 23553,
@@ -25008,18 +25059,6 @@
           ],
           "parent_keys": null,
           "definition": "CHECK (((longitude IS NULL) OR ((longitude >= ('-180'::integer)::numeric) AND (longitude <= (180)::numeric))))"
-        },
-        {
-          "oid": 23548,
-          "name": "contracts_node_id_not_null",
-          "child_oid": 23518,
-          "parent_oid": 0,
-          "type": "n",
-          "child_keys": [
-            6
-          ],
-          "parent_keys": null,
-          "definition": "NOT NULL node_id"
         },
         {
           "oid": 23557,
@@ -25270,18 +25309,6 @@
           "definition": "NOT NULL serial_number"
         },
         {
-          "oid": 23547,
-          "name": "contracts_server_id_not_null",
-          "child_oid": 23518,
-          "parent_oid": 0,
-          "type": "n",
-          "child_keys": [
-            5
-          ],
-          "parent_keys": null,
-          "definition": "NOT NULL server_id"
-        },
-        {
           "oid": 23556,
           "name": "contracts_starts_on_not_null",
           "child_oid": 23518,
@@ -25366,6 +25393,31 @@
           ],
           "parent_keys": null,
           "definition": "NOT NULL version"
+        },
+        {
+          "oid": 44340,
+          "name": "contracts_workspace_key_check",
+          "child_oid": 23518,
+          "parent_oid": 0,
+          "type": "c",
+          "child_keys": [
+            31
+          ],
+          "parent_keys": null,
+          "definition": "CHECK (((workspace_key IS NULL) OR ((workspace_key)::text ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$'::text)))"
+        },
+        {
+          "oid": 44338,
+          "name": "contracts_workspace_key_unique",
+          "child_oid": 23518,
+          "parent_oid": 0,
+          "type": "u",
+          "child_keys": [
+            2,
+            31
+          ],
+          "parent_keys": null,
+          "definition": "UNIQUE (organization_id, workspace_key)"
         }
       ],
       "policies": [
@@ -25481,6 +25533,12 @@
           "table_name": "contracts",
           "indexname": "contracts_updated_by_fk_idx",
           "indexdef": "CREATE INDEX contracts_updated_by_fk_idx ON service.contracts USING btree (updated_by)"
+        },
+        {
+          "schema": "service",
+          "table_name": "contracts",
+          "indexname": "contracts_workspace_key_unique",
+          "indexdef": "CREATE UNIQUE INDEX contracts_workspace_key_unique ON service.contracts USING btree (organization_id, workspace_key)"
         }
       ]
     },
@@ -28835,7 +28893,7 @@
         "id"
       ],
       "cardinality": "1:N",
-      "optional": false
+      "optional": true
     },
     {
       "oid": 23594,
@@ -28891,7 +28949,7 @@
         "id"
       ],
       "cardinality": "1:N",
-      "optional": false
+      "optional": true
     },
     {
       "oid": 23584,
@@ -31807,6 +31865,21 @@
       "version": "011_plan_strategy_options.sql",
       "checksum": "9b79861e42c693129b84eb43f6ee7614494134907373be2b9c84565c54f71fbd",
       "applied_at": "2026-10-12T16:52:12.076Z"
+    },
+    {
+      "version": "012_connected_customer_workflow.sql",
+      "checksum": "c6a47d4bdf80cb86688df54c79c85db2c94c5b3fb691e1271d02f8038b59fbe4",
+      "applied_at": "2026-10-16T16:25:42.208Z"
+    },
+    {
+      "version": "013_audit_deleted_customer_reference.sql",
+      "checksum": "db3427e80f742ec999160fcca46b20f83d356c61284767c683240ec2e8350bf0",
+      "applied_at": "2026-10-16T16:33:00.381Z"
+    },
+    {
+      "version": "014_contract_billing_periods.sql",
+      "checksum": "48581ec45d83360b90963d188925f3a487b846b38ca3e168c11849030ed42378",
+      "applied_at": "2026-10-16T16:38:32.022Z"
     }
   ]
 }

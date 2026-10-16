@@ -22,6 +22,8 @@ import SouthRoundedIcon from "@mui/icons-material/SouthRounded";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 import ViewColumnOutlinedIcon from "@mui/icons-material/ViewColumnOutlined";
 import Box from "@mui/material/Box";
+import Alert from "@mui/material/Alert";
+import { createStoredPlan, loadPlans, type StoredPlan } from "./plan-api";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import Collapse from "@mui/material/Collapse";
@@ -45,10 +47,10 @@ import TableRow from "@mui/material/TableRow";
 import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import { useMemo, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 
 type Plan = {
-  id: number;
+  id: string;
   name: string;
   contracts: number;
   suspended: number;
@@ -60,14 +62,12 @@ type Plan = {
   frequency: string;
 };
 
-const initialPlans: readonly Plan[] = [
-  { id: 1, name: "Hidalgo · 10 Mbps", contracts: 0, suspended: 0, upload: "10mbps", download: "10mbps", burst: false, schedule: false, price: "$299.00", frequency: "Mensual" },
-  { id: 2, name: "Hidalgo · 25 Mbps", contracts: 0, suspended: 0, upload: "25mbps", download: "25mbps", burst: false, schedule: false, price: "$399.00", frequency: "Mensual" },
-  { id: 3, name: "Hidalgo · 40 Mbps", contracts: 0, suspended: 0, upload: "40mbps", download: "40mbps", burst: false, schedule: false, price: "$559.00", frequency: "Mensual" },
-  { id: 4, name: "Teotihuacán · 25 Mbps", contracts: 0, suspended: 0, upload: "25mbps", download: "25mbps", burst: false, schedule: false, price: "$289.00", frequency: "Mensual" },
-  { id: 5, name: "Teotihuacán · 40 Mbps", contracts: 0, suspended: 0, upload: "40mbps", download: "40mbps", burst: false, schedule: false, price: "$389.00", frequency: "Mensual" },
-  { id: 6, name: "Teotihuacán · 60 Mbps", contracts: 0, suspended: 0, upload: "60mbps", download: "60mbps", burst: false, schedule: false, price: "$549.00", frequency: "Mensual" },
-] as const;
+function displayPlan(plan: StoredPlan): Plan {
+  return { id:plan.id,name:plan.name,contracts:plan.contracts,suspended:plan.suspended,
+    upload:`${plan.uploadKbps}kbps`,download:`${plan.downloadKbps}kbps`,burst:plan.burstEnabled,schedule:false,
+    price:new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(plan.price),
+    frequency:({monthly:'Mensual',bimonthly:'Bimestral',quarterly:'Trimestral',semiannual:'Semestral',weekly:'Semanal',daily:'Diario',annual:'Anual',once:'Única'} as Record<string,string>)[plan.frequency] || plan.frequency };
+}
 
 const columnOptions = [
   { key: "contracts", label: "Contratos" },
@@ -255,19 +255,21 @@ function WisproField({ label, required = false, children }: { label: string; req
   );
 }
 
-function CreatePlanDialog({ open, onClose, onCreate }: { open: boolean; onClose: () => void; onCreate: (draft: CreatePlanDraft) => void }) {
+function CreatePlanDialog({ open, onClose, onCreate }: { open: boolean; onClose: () => void; onCreate: (draft: CreatePlanDraft) => Promise<void> }) {
   const [tab, setTab] = useState<"basic" | "mikrotik" | "product">("basic");
   const [draft, setDraft] = useState<CreatePlanDraft>(emptyPlanDraft);
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const updateDraft = <Key extends keyof CreatePlanDraft>(key: Key, value: CreatePlanDraft[Key]) => setDraft((current) => ({ ...current, [key]: value }));
-  const close = () => { setTab("basic"); setSubmitted(false); onClose(); };
-  const create = () => {
+  const close = () => { if (saving) return; setTab("basic"); setSubmitted(false); setError(""); onClose(); };
+  const create = async () => {
     setSubmitted(true);
-    if (!draft.name.trim() || !draft.price.trim()) { setTab("basic"); return; }
-    onCreate(draft);
-    setDraft(emptyPlanDraft);
-    setSubmitted(false);
-    setTab("basic");
+    if (!draft.name.trim() || !draft.price.trim() || !Number.isFinite(Number(draft.price)) || Number(draft.price)<0) { setTab("basic"); return; }
+    setSaving(true);setError("");
+    try { await onCreate(draft);setDraft(emptyPlanDraft);setSubmitted(false);setTab("basic"); }
+    catch (error) { setError(error instanceof Error ? error.message : 'No se pudo guardar el plan.'); }
+    finally { setSaving(false); }
   };
 
   const tabs = [
@@ -337,15 +339,20 @@ function CreatePlanDialog({ open, onClose, onCreate }: { open: boolean; onClose:
             </Box>
           </Box>}
         </Box>
-        <DialogActions sx={{ mx: { xs: 1.5, md: 5 }, mt: 2.5, px: 0, py: 2.5, borderTop: "1px solid #E3E5E7" }}><Button onClick={close} sx={{ minHeight: { xs: 44, sm: 28 }, px: 1.25, color: "#676A6C", borderRadius: "2px", backgroundColor: "#F2F2F2", fontSize: 12 }}>Cancelar</Button><Tooltip title="Ayuda para crear un plan"><IconButton aria-label="Ayuda para crear un plan" onClick={() => setTab("basic")} sx={{ width: { xs: 44, sm: 28 }, height: { xs: 44, sm: 28 }, color: "#1C84C6" }}><HelpOutlineRoundedIcon sx={{ fontSize: 22 }} /></IconButton></Tooltip><Button variant="contained" onClick={create} sx={{ minHeight: { xs: 44, sm: 28 }, px: 1.25, borderRadius: "2px", boxShadow: "none", fontSize: 12 }}>Crear</Button></DialogActions>
+        {error && <Alert severity="error" sx={{ mt:2 }}>{error}</Alert>}
+        <DialogActions sx={{ mx: { xs: 1.5, md: 5 }, mt: 2.5, px: 0, py: 2.5, borderTop: "1px solid #E3E5E7" }}><Button onClick={close} disabled={saving} sx={{ minHeight: { xs: 44, sm: 28 }, px: 1.25, color: "#676A6C", borderRadius: "2px", backgroundColor: "#F2F2F2", fontSize: 12 }}>Cancelar</Button><Tooltip title="Ayuda para crear un plan"><IconButton aria-label="Ayuda para crear un plan" onClick={() => setTab("basic")} sx={{ width: { xs: 44, sm: 28 }, height: { xs: 44, sm: 28 }, color: "#1C84C6" }}><HelpOutlineRoundedIcon sx={{ fontSize: 22 }} /></IconButton></Tooltip><Button variant="contained" onClick={create} disabled={saving} sx={{ minHeight: { xs: 44, sm: 28 }, px: 1.25, borderRadius: "2px", boxShadow: "none", fontSize: 12 }}>{saving ? "Guardando…" : "Crear"}</Button></DialogActions>
       </DialogContent>
     </Dialog>
   );
 }
 
-export function PlanesModule() {
-  const [planList, setPlanList] = useState<Plan[]>(() => [...initialPlans]);
-  const [selectedId, setSelectedId] = useState(1);
+export function PlanesModule({ canWrite = false }: { canWrite?: boolean }) {
+  const [planList, setPlanList] = useState<Plan[]>([]);
+  const [selectedId, setSelectedId] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const reloadPlans = async () => { setLoading(true);setLoadError("");try { setPlanList((await loadPlans()).map(displayPlan)); } catch(error) { setLoadError(error instanceof Error ? error.message : 'No se pudieron cargar los planes.'); } finally { setLoading(false); } };
+  useEffect(()=>{ const controller=new AbortController();loadPlans(controller.signal).then(plans=>setPlanList(plans.map(displayPlan))).catch((error:unknown)=>{if (!controller.signal.aborted) setLoadError(error instanceof Error ? error.message : 'No se pudieron cargar los planes.');}).finally(()=>{if (!controller.signal.aborted) setLoading(false);});return ()=>controller.abort(); },[]);
   const [query, setQuery] = useState("");
   const [priceQuery, setPriceQuery] = useState("");
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -373,14 +380,13 @@ export function PlanesModule() {
   const visibleColumnCount = columnOptions.filter(({ key }) => visibleColumns[key]).length;
   const openColumnMenu = (event: ReactMouseEvent<HTMLElement>) => setColumnMenuAnchor(event.currentTarget);
   const toggleColumn = (key: PlanColumnKey) => setVisibleColumns((current) => ({ ...current, [key]: !current[key] }));
-  const createPlan = (draft: CreatePlanDraft) => {
-    const nextId = Math.max(0, ...planList.map((plan) => plan.id)) + 1;
-    const numericPrice = Number(draft.price);
-    const newPlan: Plan = { id: nextId, name: draft.name.trim(), contracts: 0, suspended: 0, upload: `${draft.maxUpload}${draft.uploadUnit}`, download: `${draft.maxDownload}${draft.downloadUnit}`, burst: draft.burstEnabled, schedule: false, price: Number.isFinite(numericPrice) ? new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(numericPrice) : draft.price, frequency: "Mensual" };
-    setPlanList((current) => [...current, newPlan]);
-    setSelectedId(nextId);
-    setCreateOpen(false);
-    setMessage(`Plan “${newPlan.name}” creado localmente.`);
+  const createPlan = async (draft: CreatePlanDraft) => {
+    const units: Record<string,number> = {kbps:1,mbps:1000,gbps:1_000_000};
+    const strategies: Record<string,string> = { 'Colas simples':'simple_queue',pcq_w_queue_tree:'pcq_queue_tree',pcq_w_simple_queue:'pcq_simple_queue','Colas simples con cake':'cake_simple_queue' };
+    const saved = await createStoredPlan({name:draft.name,price:Number(draft.price),uploadKbps:Number(draft.maxUpload)*units[draft.uploadUnit.toLowerCase()],downloadKbps:Number(draft.maxDownload)*units[draft.downloadUnit.toLowerCase()],visible:draft.visible,burstEnabled:draft.burstEnabled,mikrotikStrategy:strategies[draft.mikrotikStrategy],
+      productCodes:{service:draft.productCode,interest_first:draft.firstInterestCode,interest_second:draft.secondInterestCode,reconnection:draft.reconnectionCode,installation:draft.installationCode}});
+    setSelectedId(saved.id);setCreateOpen(false);setMessage(`Plan “${draft.name.trim()}” guardado en el servidor.`);
+    await reloadPlans();
   };
 
   return (
@@ -389,10 +395,12 @@ export function PlanesModule() {
         <HelpOutlineRoundedIcon sx={{ color: "#1C84C6", fontSize: 26 }} />
         <Typography component="h1" sx={{ color: "#676A6C", fontSize: { xs: 20, sm: 22 }, fontWeight: 400, lineHeight: 1 }}>Planes</Typography>
         <Typography sx={{ display: { xs: "none", sm: "block" }, ml: 0.4, color: "#1C84C6", fontSize: 12 }}>Inicio</Typography><Typography sx={{ display: { xs: "none", sm: "block" }, color: "#A2A4A6", fontSize: 12 }}>/</Typography><Typography sx={{ display: { xs: "none", sm: "block" }, color: "#676A6C", fontSize: 12 }}>Planes</Typography>
-        <Button variant="contained" size="small" startIcon={<AddRoundedIcon sx={{ fontSize: "17px !important" }} />} onClick={() => setCreateOpen(true)} sx={{ ml: "auto", minHeight: { xs: 44, sm: 28 }, px: 1.25, borderRadius: "3px", boxShadow: "none", fontSize: 12, whiteSpace: "nowrap" }}><Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>Crear nuevo Plan</Box><Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>Crear</Box></Button>
+        <Button variant="contained" size="small" startIcon={<AddRoundedIcon sx={{ fontSize: "17px !important" }} />} onClick={() => setCreateOpen(true)} disabled={!canWrite || loading} sx={{ ml: "auto", minHeight: { xs: 44, sm: 28 }, px: 1.25, borderRadius: "3px", boxShadow: "none", fontSize: 12, whiteSpace: "nowrap" }}><Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>Crear nuevo Plan</Box><Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>Crear</Box></Button>
       </Box>
 
       <Box sx={{ px: { xs: 1.25, md: 2 }, pt: 1.25 }}>
+        {loading && <Alert severity="info" sx={{mb:2}}>Cargando planes…</Alert>}
+        {loadError && <Alert severity="error" sx={{mb:2}} action={<Button color="inherit" onClick={reloadPlans}>Reintentar</Button>}>{loadError}</Alert>}
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0,1fr) 44px", sm: "minmax(0,1fr) 175px" }, alignItems: "center", gap: { xs: 0.75, md: 3.5 }, mb: 2, pl: { lg: "10%" } }}>
           <TextField value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Puedes buscar por: Nombre, Precio" size="small" fullWidth slotProps={{ htmlInput: { "aria-label": "Buscar planes por nombre o precio" }, input: { startAdornment: <InputAdornment position="start"><SearchRoundedIcon sx={{ color: "#676A6C", fontSize: 20 }} /></InputAdornment> } }} sx={{ flex: 1, "& .MuiOutlinedInput-root": { height: { xs: 44, sm: 33 }, borderRadius: "30px", backgroundColor: "#FDFDFD", fontSize: 15 }, "& .MuiOutlinedInput-notchedOutline": { borderColor: "#C1C3C4" }, "& input::placeholder": { color: "#676A6C", opacity: 1 } }} />
           <Button variant="outlined" startIcon={<SearchRoundedIcon sx={{ fontSize: "18px !important" }} />} onClick={() => setAdvancedOpen((current) => !current)} aria-expanded={advancedOpen} aria-label="Búsqueda avanzada" sx={{ minWidth: 0, width: "100%", height: { xs: 44, sm: 33 }, px: { xs: 0, sm: 2 }, color: "#676A6C", borderColor: "#C8CACC", borderRadius: "30px", fontSize: 12, whiteSpace: "nowrap", "& .MuiButton-startIcon": { mr: { xs: 0, sm: 1 } } }}><Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>Búsqueda Avanzada</Box></Button>
@@ -466,13 +474,13 @@ export function PlanesModule() {
               </Table>
             </Box>
           </Box>
-          {detailVisible && <PlanDetail plan={selected} />}
+          {detailVisible && selected && <PlanDetail plan={selected} />}
         </Box>
       </Box>
 
       <CreatePlanDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreate={createPlan} />
 
-      <Box sx={{ position: "fixed", right: 22, bottom: 18, zIndex: 10 }}><Tooltip title="Ayuda"><IconButton aria-label="Abrir ayuda" onClick={() => setMessage("Ayuda de Planes en la demostración local.")} sx={{ width: 48, height: 48, color: "#FFFFFF", backgroundColor: "#1C84C6", boxShadow: "0 3px 10px rgba(0,0,0,.20)", "&:hover": { backgroundColor: "#166B9F" } }}><HelpOutlineRoundedIcon /></IconButton></Tooltip></Box>
+      <Box sx={{ position: "fixed", right: 22, bottom: 18, zIndex: 10 }}><Tooltip title="Ayuda"><IconButton aria-label="Abrir ayuda" onClick={() => setMessage("Registra tus planes para asociarlos a los contratos de tus clientes.")} sx={{ width: 48, height: 48, color: "#FFFFFF", backgroundColor: "#1C84C6", boxShadow: "0 3px 10px rgba(0,0,0,.20)", "&:hover": { backgroundColor: "#166B9F" } }}><HelpOutlineRoundedIcon /></IconButton></Tooltip></Box>
       <Snackbar open={Boolean(message)} autoHideDuration={3200} onClose={() => setMessage("")} message={message} />
     </Box>
   );

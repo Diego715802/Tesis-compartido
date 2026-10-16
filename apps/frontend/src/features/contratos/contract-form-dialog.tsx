@@ -19,7 +19,8 @@ import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { loadPlans, type StoredPlan } from "../planes/plan-api";
 import type { Customer, CustomerContract } from "../clientes/customer-types";
 import { ContractAdvancedForm } from "./contract-form-advanced";
 import { ContractBasicForm } from "./contract-form-basic";
@@ -54,10 +55,24 @@ function ContractFormSession({ onClose, onSave, customers, initialCustomerId, ed
   const [saving, setSaving] = useState(false);
   const [requestError, setRequestError] = useState("");
   const [errors, setErrors] = useState<ContractFormErrors>({});
+  const [plans, setPlans] = useState<StoredPlan[]>([]);
+  const [planLoading, setPlanLoading] = useState(true);
+  const [planError, setPlanError] = useState("");
+  useEffect(() => {
+    const controller = new AbortController();
+    loadPlans(controller.signal).then(setPlans).catch((error: unknown) => {
+      if (!controller.signal.aborted) setPlanError(error instanceof Error ? error.message : 'No se pudo cargar el catálogo de planes.');
+    }).finally(()=>{ if (!controller.signal.aborted) setPlanLoading(false); });
+    return ()=>controller.abort();
+  }, []);
   const customer = customers.find((item) => item.id === customerId);
-  const options = contractFormOptions(customers, contract.server, contract.olt);
+  const options = { ...contractFormOptions(customers, contract.server, contract.olt),plans:plans.map(plan=>plan.name) };
 
   function patch(changes: Partial<CustomerContract>) {
+    if (changes.plan !== undefined) {
+      const selected = plans.find(plan=>plan.name===changes.plan);
+      changes = { ...changes,planId:selected?.id,...(!editing && selected ? {price:selected.price} : {}) };
+    }
     setContract((current) => ({ ...current, ...changes }));
     const dependentErrors = changes.accessMode !== undefined ? ["ipAddress", "netmask", "gateway", "dnsPrimary", "dnsSecondary", "macAddress", "username", "password", "pppProfile"] : changes.oltEnabled === false ? ["olt", "onuSerial", "onuPort", "gateway", "dnsPrimary", "vlan", "extraVlans", "napPort"] : [];
     setErrors((current) => Object.fromEntries(Object.entries(current).filter(([name]) => !Object.hasOwn(changes, name) && !dependentErrors.includes(name))));
@@ -98,6 +113,8 @@ function ContractFormSession({ onClose, onSave, customers, initialCustomerId, ed
       </Tabs>
       <DialogContent sx={{ flex: 1, p: { xs: 1.5, sm: 2.5 }, minWidth: 0 }}>
         {!customers.length && <Alert severity="warning" sx={{ mb: 2 }}>Registra un cliente antes de crear un contrato. <Link href="/clientes">Ir a Clientes</Link></Alert>}
+        {planError && <Alert severity="error" sx={{ mb: 2 }}>{planError}</Alert>}
+        {!planLoading && !planError && !plans.length && <Alert severity="warning" sx={{ mb: 2 }}>Registra un plan antes de crear el contrato. <Link href="/planes">Ir a Planes</Link></Alert>}
         {requestError && <Alert severity="error" sx={{ mb: 2 }}>{requestError}</Alert>}
         {saveError && <Alert severity="error" sx={{ mb: 2 }}>{saveError}</Alert>}
         {Object.keys(errors).length > 0 && <Alert severity="error" sx={{ mb: 2 }}>Revisa los campos señalados antes de guardar el contrato.</Alert>}
@@ -109,7 +126,7 @@ function ContractFormSession({ onClose, onSave, customers, initialCustomerId, ed
       </DialogContent>
       <DialogActions sx={{ flexWrap: "wrap", gap: 0.75, px: { xs: 1.5, sm: 2.5 }, py: 1.5, borderTop: "1px solid", borderColor: "divider" }}>
         <Button color="inherit" onClick={onClose} disabled={saving}>Cancelar</Button>
-        <Button type="submit" variant="contained" disabled={saving || !customers.length} startIcon={<SaveOutlinedIcon />} sx={{ boxShadow: "none" }}>{saving ? "Guardando…" : editing ? "Actualizar" : "Crear"}</Button>
+        <Button type="submit" variant="contained" disabled={saving || !customers.length || planLoading || Boolean(planError) || !plans.length} startIcon={<SaveOutlinedIcon />} sx={{ boxShadow: "none" }}>{saving ? "Guardando…" : planLoading ? "Cargando planes…" : editing ? "Actualizar" : "Crear"}</Button>
       </DialogActions>
     </Box>
   </Dialog>;

@@ -10,6 +10,8 @@ export type MikrotikSensorValue = {
   unit: string;
 };
 
+export type MikrotikHealthSensor = MikrotikSensorValue & { name: string };
+
 export type MikrotikInterfaceTelemetry = {
   name: string;
   running: boolean;
@@ -18,6 +20,7 @@ export type MikrotikInterfaceTelemetry = {
   txBytes: number;
   rxBitsPerSecond: number;
   txBitsPerSecond: number;
+  ratesReady: boolean;
 };
 
 export type MikrotikTelemetry = {
@@ -38,6 +41,7 @@ export type MikrotikTelemetry = {
     totalMemoryBytes: number | null;
   };
   health: {
+    sensors: MikrotikHealthSensor[];
     temperature: MikrotikSensorValue | null;
     cpuTemperature: MikrotikSensorValue | null;
     boardTemperature: MikrotikSensorValue | null;
@@ -51,6 +55,7 @@ export type MikrotikTelemetry = {
     };
   };
   traffic: {
+    ratesReady: boolean;
     rxBitsPerSecond: number;
     txBitsPerSecond: number;
     interfaces: MikrotikInterfaceTelemetry[];

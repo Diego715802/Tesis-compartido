@@ -8,6 +8,6 @@ export const metadata: Metadata = {
 };
 
 export default async function PlanesPage() {
-  await requireIdentity("planes:read");
-  return <PlanesModule />;
+  const identity = await requireIdentity("planes:read");
+  return <PlanesModule canWrite={identity.permissions.includes("planes:write")} />;
 }

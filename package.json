@@ -14,6 +14,7 @@
     "test": "npm run test --workspace=@erp/backend",
     "test:database": "node scripts/test-customer-database.cjs",
     "test:erp-database": "node scripts/test-erp-database.cjs",
+    "test:customer-flow": "node scripts/test-customer-contract-flow.mjs",
     "test:security": "node scripts/test-auth-security.mjs",
     "test:network-boundary": "node scripts/test-network-boundary.mjs",
     "test:http-boundaries": "node scripts/test-http-boundaries.mjs",
