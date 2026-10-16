@@ -162,8 +162,7 @@ export function CustomerFormDialog({ customer, onClose, onSave, saving = false }
               </Frame>
 
               <Frame>
-                <Typography component="h3" sx={{ mb: 1.25, fontSize: "0.86rem", fontWeight: 750 }}>Autocompletar punto GPS con el mapa</Typography>
-                <TextField fullWidth label="Ingresar dirección" placeholder="Haz clic en el mapa o escribe una dirección" sx={inputSx} />
+                <Typography component="h3" sx={{ mb: 1.25, fontSize: "0.86rem", fontWeight: 750 }}>Ubicación del cliente</Typography>
                 <Box sx={{ ...gridTwo, mt: 1.45 }}>
                   <TextField label="Latitud" type="number" value={draft.address.latitude} onChange={(e) => setDraft({ ...draft, address: { ...draft.address, latitude: Number(e.target.value) } })} slotProps={{ input: { endAdornment: latLngAdornment } }} sx={inputSx} />
                   <TextField label="Longitud" type="number" value={draft.address.longitude} onChange={(e) => setDraft({ ...draft, address: { ...draft.address, longitude: Number(e.target.value) } })} slotProps={{ input: { endAdornment: latLngAdornment } }} sx={inputSx} />

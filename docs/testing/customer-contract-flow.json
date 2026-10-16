@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-16T16:43:51.625Z",
+  "timestamp": "2026-10-16T17:56:00.327Z",
   "environment": "local",
   "transport": "HTTP real → Next BFF → backend → PostgreSQL",
   "results": [

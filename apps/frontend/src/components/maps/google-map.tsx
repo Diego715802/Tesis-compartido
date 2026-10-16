@@ -3,6 +3,8 @@
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
+import MenuItem from "@mui/material/MenuItem";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -46,8 +48,21 @@ function loadGoogleMaps(apiKey: string) {
   if (googleMapsPromise) return googleMapsPromise;
 
   googleMapsPromise = new Promise<GoogleMapsNamespace>((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error("Google Maps tardó demasiado en responder.")), 15000);
+    const fail = () => {
+      window.clearTimeout(timeout);
+      reject(new Error("No fue posible cargar Google Maps."));
+    };
+    const mapsWindow = window as typeof window & { gm_authFailure?: () => void };
+    const previousAuthFailure = mapsWindow.gm_authFailure;
+    mapsWindow.gm_authFailure = () => {
+      previousAuthFailure?.();
+      window.dispatchEvent(new Event("comecore:maps-auth-error"));
+      fail();
+    };
     const currentScript = document.querySelector<HTMLScriptElement>('script[data-comecore-google-maps="true"]');
     const resolveMaps = () => {
+      window.clearTimeout(timeout);
       const maps = (window as typeof window & { google?: { maps?: GoogleMapsNamespace } }).google?.maps;
       if (maps) resolve(maps);
       else reject(new Error("Google Maps no pudo inicializarse."));
@@ -55,7 +70,7 @@ function loadGoogleMaps(apiKey: string) {
 
     if (currentScript) {
       currentScript.addEventListener("load", resolveMaps, { once: true });
-      currentScript.addEventListener("error", () => reject(new Error("No fue posible cargar Google Maps.")), { once: true });
+      currentScript.addEventListener("error", fail, { once: true });
       return;
     }
 
@@ -64,8 +79,10 @@ function loadGoogleMaps(apiKey: string) {
     script.async = true;
     script.defer = true;
     script.dataset.comecoreGoogleMaps = "true";
+    // Match Next's strict CSP without allowing arbitrary external scripts.
+    script.nonce = document.querySelector<HTMLScriptElement>("script[nonce]")?.nonce ?? "";
     script.addEventListener("load", resolveMaps, { once: true });
-    script.addEventListener("error", () => reject(new Error("No fue posible cargar Google Maps.")), { once: true });
+    script.addEventListener("error", fail, { once: true });
     document.head.appendChild(script);
   });
 
@@ -82,9 +99,9 @@ function GoogleMapFallback({ point, zoom, title }: { point: MapPoint; zoom: numb
         component="iframe"
         title={title}
         src={embedUrl}
-        loading="lazy"
+        loading="eager"
         allowFullScreen
-        referrerPolicy="no-referrer-when-downgrade"
+        referrerPolicy="strict-origin-when-cross-origin"
         sx={{ width: "100%", height: "100%", border: 0 }}
       />
       <Link
@@ -137,10 +154,11 @@ export function GoogleMap({
 }: GoogleMapProps) {
   const mapElementRef = useRef<HTMLDivElement | null>(null);
   const [loadState, setLoadState] = useState<"idle" | "loading" | "ready" | "fallback">("idle");
+  const [previewMarkerId, setPreviewMarkerId] = useState("");
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?.trim() ?? "";
   const selectedPoint = useMemo(
-    () => markers.find((marker) => marker.id === selectedMarkerId)?.position ?? center,
-    [center, markers, selectedMarkerId],
+    () => markers.find((marker) => marker.id === (selectedMarkerId || previewMarkerId))?.position ?? center,
+    [center, markers, selectedMarkerId, previewMarkerId],
   );
 
   useEffect(() => {
@@ -152,6 +170,8 @@ export function GoogleMap({
     let cancelled = false;
     const listeners: GoogleMapsListener[] = [];
     const overlays: GoogleMapsObject[] = [];
+    const authenticationFailed = () => { if (!cancelled) setLoadState("fallback"); };
+    window.addEventListener("comecore:maps-auth-error", authenticationFailed);
     setLoadState("loading");
 
     loadGoogleMaps(apiKey)
@@ -223,12 +243,25 @@ export function GoogleMap({
 
     return () => {
       cancelled = true;
+      window.removeEventListener("comecore:maps-auth-error", authenticationFailed);
       listeners.forEach((listener) => listener.remove());
       overlays.forEach((overlay) => overlay.setMap(null));
     };
   }, [apiKey, markers, onMapClick, onMarkerClick, selectedMarkerId, selectedPoint, zoom]);
 
   return (
+    <Box>
+    {loadState === "fallback" && markers.length > 1 && (
+      <TextField
+        select fullWidth size="small" label="Punto a mostrar en Google Maps"
+        value={markers.some(marker => marker.id === (selectedMarkerId || previewMarkerId)) ? (selectedMarkerId || previewMarkerId) : ""}
+        onChange={event => { setPreviewMarkerId(event.target.value); onMarkerClick?.(event.target.value); }}
+        sx={{ mb: 1 }}
+      >
+        <MenuItem value="">Vista central</MenuItem>
+        {markers.map(marker => <MenuItem key={marker.id} value={marker.id}>{marker.title}</MenuItem>)}
+      </TextField>
+    )}
     <Box
       role="region"
       aria-label={ariaLabel}
@@ -241,6 +274,12 @@ export function GoogleMap({
           <Typography sx={{ color: "text.secondary", fontSize: "0.72rem", fontWeight: 650 }}>Cargando Google Maps…</Typography>
         </Box>
       )}
+    </Box>
+    {loadState === "fallback" && onMapClick && (
+      <Typography sx={{ px: 1.5, py: 1, color: "text.secondary", fontSize: "0.75rem" }}>
+        Ajusta la ubicación con los campos de latitud y longitud. El mapa muestra el punto guardado.
+      </Typography>
+    )}
     </Box>
   );
 }

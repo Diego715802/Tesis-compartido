@@ -5,7 +5,10 @@ import { backendConfig, identityFromHeaders, permissionForPath, requestHostAllow
 export async function proxy(request: NextRequest) {
   const nonce = randomBytes(18).toString("base64");
   const development = process.env.NODE_ENV === "development";
-  const csp = ["default-src 'self'", `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${development ? " 'unsafe-eval'" : ""}`, "style-src 'self' 'unsafe-inline'", "img-src 'self' data: blob:", "font-src 'self'", `connect-src 'self'${development ? " ws: wss:" : ""}`, "object-src 'none'", "base-uri 'none'", "form-action 'self'", "frame-ancestors 'none'"].join("; ");
+  // Maps also appear in dialogs reached through client-side navigation. Keep one
+  // document policy, with Google limited to frames, tiles, fonts and API traffic.
+  // Scripts still require the per-response nonce; no script host allowlist.
+  const csp = ["default-src 'self'", `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${development ? " 'unsafe-eval'" : ""}`, "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", "img-src 'self' data: blob: https://*.googleapis.com https://*.gstatic.com https://*.google.com https://*.googleusercontent.com", "font-src 'self' https://fonts.gstatic.com", `connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://*.google.com${development ? " ws: wss:" : ""}`, "frame-src https://www.google.com https://maps.google.com", "worker-src 'self' blob:", "object-src 'none'", "base-uri 'none'", "form-action 'self'", "frame-ancestors 'none'"].join("; ");
   const deny = (message: string, status: number) => new NextResponse(message, { status, headers: { "Content-Type": "text/plain; charset=utf-8", "Content-Security-Policy": csp, "Cache-Control": "private, no-store" } });
   try {
     if (!requestHostAllowed(request.headers)) return deny("Dirección de acceso no permitida.", 400);

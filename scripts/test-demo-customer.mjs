@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import { makeDemoCustomer } from './fixtures/demo-customer.mjs';
+import { customerSchema } from '../apps/backend/dist/workspace/workspace-schema.js';
+const ids=['11111111-1111-4111-8111-111111111111','22222222-2222-4222-8222-222222222222'];
+const demo=customerSchema.parse(makeDemoCustomer(ids,new Date('2026-10-16T18:00:00Z')));
+const invoices=demo.contracts.flatMap(c=>c.invoices);
+assert.equal(demo.account.balance,invoices.reduce((sum,i)=>sum+i.balance,0));
+assert.equal(demo.account.balance,demo.account.transactions.reduce((sum,t)=>sum+(t.type==='Cargo'?t.amount:-t.amount),0));
+assert.equal(demo.account.unpaidInvoices,invoices.filter(i=>i.status==='Pendiente').length);
+assert.ok(demo.contracts.every(c=>c.planId && !c.password && !c.wifiPassword && !c.provisionWan && c.server==='Sin configurar' && c.ipAddress.startsWith('192.0.2.')));
+assert.ok(!Object.values(demo.communication).some(Boolean) && !demo.billing.enabled && !demo.portalAccess && demo.paymentGateway==='Sin pasarela');
+assert.ok(demo.contact.email.endsWith('@example.invalid'));
+assert.equal(demo.contracts.filter(c=>c.status==='Habilitado').length,1);assert.equal(demo.contracts.filter(c=>c.status==='Suspendido').length,1);
+assert.equal(demo.deviceRecords[0].pushToken,'');
+console.log('8 controles del expediente ficticio: coherencia de saldo/recibos/movimientos, estados de prueba y ausencia de efectos externos.');

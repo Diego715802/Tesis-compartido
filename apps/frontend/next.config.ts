@@ -5,7 +5,9 @@ const nextConfig: NextConfig = {
     const headers = [
       { key: "X-Content-Type-Options", value: "nosniff" },
       { key: "X-Frame-Options", value: "DENY" },
-      { key: "Referrer-Policy", value: "no-referrer" },
+      // Google checks the site's origin for HTTP-referrer API-key restrictions.
+      // Cross-origin requests never receive a customer path or query string.
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
       { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
       { key: "X-DNS-Prefetch-Control", value: "off" },
     ];
