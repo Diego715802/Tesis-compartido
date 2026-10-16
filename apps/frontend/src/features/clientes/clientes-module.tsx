@@ -23,7 +23,7 @@ import { useTheme } from "@mui/material/styles";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { demoCustomers } from "./customer-data";
-import { appendCustomerTickets, saveCustomerDetails, useCustomers, useCustomerPersistenceStatus } from "./customer-store";
+import { appendCustomerTickets, commitCustomers, retryCustomerWorkspace, saveCustomerDetails, useCustomers, useCustomerPersistenceStatus } from "./customer-store";
 import { CustomerDetailPanel } from "./customer-detail-panel";
 import { PasswordDialog } from "./customer-dialogs";
 import { CustomerFormDialog } from "./customer-form-dialog";
@@ -109,7 +109,7 @@ export function ClientesModule() {
   const theme = useTheme();
   const compactDetail = useMediaQuery(theme.breakpoints.down("lg"));
   const [status, setStatus] = useState<LoadStatus>("ready");
-  const [customers, setCustomers] = useCustomers();
+  const [customers] = useCustomers();
   const persistence = useCustomerPersistenceStatus();
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<CustomerFilters>(emptyFilters);
@@ -127,6 +127,8 @@ export function ClientesModule() {
   const [exportAnchor, setExportAnchor] = useState<HTMLElement | null>(null);
   const [passwordCustomer, setPasswordCustomer] = useState<Customer | null>(null);
   const [message, setMessage] = useState("");
+  const [messageSeverity, setMessageSeverity] = useState<"success" | "error">("success");
+  const [savingCustomer, setSavingCustomer] = useState(false);
 
   const normalizedQuery = normalizeSearch(query);
   const filteredCustomers = useMemo(
@@ -176,17 +178,32 @@ export function ClientesModule() {
     if (action === "password") setPasswordCustomer(customer);
   }
 
-  function saveCustomer(updatedCustomer: Customer) {
-    setCustomers((current) => saveCustomerDetails(current, updatedCustomer));
-    setSelectedCustomerId(updatedCustomer.id);
-    setEditingCustomer(null);
-    setCreatingCustomer(false);
-    setMessage("El expediente del cliente se actualizó.");
+  async function saveCustomer(updatedCustomer: Customer) {
+    if (savingCustomer) return;
+    setSavingCustomer(true);
+    try {
+      await commitCustomers((current) => saveCustomerDetails(current, updatedCustomer));
+      setSelectedCustomerId(updatedCustomer.id);
+      setEditingCustomer(null);
+      setCreatingCustomer(false);
+      setMessageSeverity("success");
+      setMessage("El expediente del cliente se guardó en el servidor.");
+    } catch (error) {
+      setMessageSeverity("error");
+      setMessage(error instanceof Error ? error.message : "No se pudo guardar el expediente. Inténtalo de nuevo.");
+    } finally { setSavingCustomer(false); }
   }
 
-  function saveProfileCustomer(updatedCustomer: Customer) {
-    setCustomers((current) => appendCustomerTickets(current, updatedCustomer));
-    setMessage("El ticket se guardó en el expediente del cliente.");
+  async function saveProfileCustomer(updatedCustomer: Customer) {
+    try {
+      await commitCustomers((current) => appendCustomerTickets(current, updatedCustomer));
+      setMessageSeverity("success");
+      setMessage("El ticket se guardó en el expediente del cliente.");
+    } catch (error) {
+      setMessageSeverity("error");
+      setMessage(error instanceof Error ? error.message : "No se pudo guardar el ticket. Inténtalo de nuevo.");
+      throw error;
+    }
   }
 
   function exportCustomers(includeAccess = false) {
@@ -200,15 +217,18 @@ export function ClientesModule() {
     anchor.click();
     URL.revokeObjectURL(url);
     setExportAnchor(null);
+    setMessageSeverity("success");
     setMessage("La exportación CSV se generó correctamente.");
   }
 
-  function retryLoading() {
+  async function retryLoading() {
     setStatus("loading");
-    window.setTimeout(() => setStatus("ready"), 420);
+    try { await retryCustomerWorkspace(); setStatus("ready"); }
+    catch { setStatus("error"); }
   }
 
-  const hasNoResults = status === "ready" && customers.length > 0 && filteredCustomers.length === 0;
+  const viewStatus = persistence.status === "loading" ? "loading" : persistence.status === "unavailable" && customers.length === 0 ? "error" : status;
+  const hasNoResults = viewStatus === "ready" && customers.length > 0 && filteredCustomers.length === 0;
 
   return (
     <Box
@@ -276,11 +296,11 @@ export function ClientesModule() {
           mt: 2,
         }}
       >
-        {status === "loading" ? (
+        {viewStatus === "loading" ? (
           <Box sx={{ overflow: "hidden", backgroundColor: "background.paper", boxShadow: "3px 3px 8px rgba(0,0,0,.18)" }}>
             <CustomerListLoading />
           </Box>
-        ) : status === "error" ? (
+        ) : viewStatus === "error" ? (
           <Box sx={{ backgroundColor: "background.paper", boxShadow: "3px 3px 8px rgba(0,0,0,.18)" }}>
             <CustomerState kind="error" onAction={retryLoading} />
           </Box>
@@ -349,10 +369,11 @@ export function ClientesModule() {
           customer={editingCustomer}
           onClose={() => setEditingCustomer(null)}
           onSave={saveCustomer}
+          saving={savingCustomer}
         />
       )}
 
-      {creatingCustomer && <CustomerFormDialog onClose={() => setCreatingCustomer(false)} onSave={saveCustomer} />}
+      {creatingCustomer && <CustomerFormDialog onClose={() => setCreatingCustomer(false)} onSave={saveCustomer} saving={savingCustomer} />}
 
       {accountCustomer && <AccountDialog customer={accountCustomer} onClose={() => setAccountCustomerId(null)} />}
 
@@ -384,21 +405,17 @@ export function ClientesModule() {
           key={passwordCustomer.id}
           customer={passwordCustomer}
           onClose={() => setPasswordCustomer(null)}
-          onSave={() => {
-            setPasswordCustomer(null);
-            setMessage("La contraseña del portal se actualizó en esta sesión.");
-          }}
         />
       )}
 
       <Snackbar open={Boolean(message)} autoHideDuration={4200} onClose={() => setMessage("")} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
-        <Alert severity="success" variant="filled" onClose={() => setMessage("")} sx={{ width: "100%" }}>{message}</Alert>
+        <Alert severity={messageSeverity} variant="filled" onClose={() => setMessage("")} sx={{ width: "100%" }}>{message}</Alert>
       </Snackbar>
     </Box>
   );
 }
 
-function CustomerQueryProfile({ customers, onEdit, onOpenAccount, onUpdate }: { customers: Customer[]; onEdit: (customer: Customer) => void; onOpenAccount: (customer: Customer) => void; onUpdate: (customer: Customer) => void }) {
+function CustomerQueryProfile({ customers, onEdit, onOpenAccount, onUpdate }: { customers: Customer[]; onEdit: (customer: Customer) => void; onOpenAccount: (customer: Customer) => void; onUpdate: (customer: Customer) => Promise<void> }) {
   const searchParams = useSearchParams();
   const requestedId = searchParams.get("cliente");
   const [dismissedId, setDismissedId] = useState<string | null>(null);

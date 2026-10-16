@@ -3,7 +3,6 @@
 import AccessTimeFilledRoundedIcon from "@mui/icons-material/AccessTimeFilledRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
-import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import SmartphoneRoundedIcon from "@mui/icons-material/SmartphoneRounded";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -12,6 +11,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { Brand } from "@/components/brand/brand";
+import { UserIdentity } from "./user-identity";
 
 const utilityButtonStyles = {
   width: 44,
@@ -62,11 +62,7 @@ export function TopNavbar({
             <NotificationsRoundedIcon sx={{ fontSize: 21 }} />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Perfil local">
-          <IconButton aria-label="Perfil local" sx={utilityButtonStyles}>
-            <PersonRoundedIcon sx={{ fontSize: 22 }} />
-          </IconButton>
-        </Tooltip>
+        <UserIdentity />
       </Toolbar>
     </AppBar>
   );

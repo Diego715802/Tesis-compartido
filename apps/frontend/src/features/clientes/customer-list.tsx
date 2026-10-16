@@ -28,6 +28,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import type { Customer, CustomerQuickAction } from "./customer-types";
+import { formatCustomerDate } from "./customer-date";
 
 type CustomerListProps = {
   customers: Customer[];
@@ -44,15 +45,6 @@ type CustomerListProps = {
   onAction: (customer: Customer, action: CustomerQuickAction) => void;
 };
 
-const dateFormatter = new Intl.DateTimeFormat("es-MX", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-});
-
-function formatDate(value: string) {
-  return dateFormatter.format(new Date(`${value}T12:00:00`));
-}
 
 function accountChip(customer: Customer) {
   if (customer.account.status === "Con deuda") {
@@ -210,7 +202,7 @@ export function CustomerList({
                         </Box>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.35, color: "text.disabled" }}>
                           <CalendarMonthOutlinedIcon sx={{ fontSize: 14 }} />
-                          <Typography sx={{ fontSize: "0.68rem" }}>{formatDate(customer.createdAt)} · {customer.customId}</Typography>
+                          <Typography sx={{ fontSize: "0.68rem" }}>{formatCustomerDate(customer.createdAt)} · {customer.customId}</Typography>
                         </Box>
                       </Box>
                     </ButtonBase>

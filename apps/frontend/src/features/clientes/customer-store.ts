@@ -1,23 +1,28 @@
 "use client";
 
 import { useSyncExternalStore, type Dispatch, type SetStateAction } from "react";
-import { demoCustomers } from "./customer-data";
 import { normalizeCustomerId } from "./customer-id";
 import type { Customer } from "./customer-types";
 
 export const CUSTOMER_STORAGE_KEY = "comecore.customers.v1";
-const CUSTOMER_DATASET_REVISION_KEY = "comecore.customers.dataset-revision";
-const CUSTOMER_DATASET_REVISION = "single-customer-2026-10-05";
-
+// This legacy key is deliberately neither read nor written. A future migration
+// requires an authenticated owner and an explicit review of the source records.
 export type CustomerPersistenceStatus = {
   status: "loading" | "saved" | "unavailable";
   message: string;
 };
 
-const serverPersistence: CustomerPersistenceStatus = { status: "loading", message: "" };
-let customers: Customer[] = demoCustomers;
+const serverPersistence: CustomerPersistenceStatus = { status: "loading", message: "Cargando los datos del servidor…" };
+const serverCustomers: Customer[] = [];
+let customers: Customer[] = serverCustomers;
 let persistence: CustomerPersistenceStatus = serverPersistence;
+let version = 0;
 let initialized = false;
+let loading: Promise<void> | null = null;
+let saveQueue: Promise<void> = Promise.resolve();
+let pendingSaves = 0;
+let generation = 0;
+let failedSaveGeneration = 0;
 const listeners = new Set<() => void>();
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -88,84 +93,153 @@ function isCustomer(value: unknown) {
   return true;
 }
 
-function readCustomers(raw: string): Customer[] {
-  const parsed: unknown = JSON.parse(raw);
-  if (!isRecord(parsed) || parsed.version !== 1 || !Array.isArray(parsed.customers) || !parsed.customers.every(isCustomer)) throw new Error("Invalid customer data");
+type WorkspaceSnapshot = { customers: Customer[]; version: number };
+class PersistenceError extends Error {
+  constructor(message: string, readonly status: number, readonly code = "") { super(message); }
+}
+
+function readSnapshot(parsed: unknown): WorkspaceSnapshot {
+  if (!isRecord(parsed) || !Number.isSafeInteger(parsed.version) || Number(parsed.version) < 0 || !Array.isArray(parsed.customers) || !parsed.customers.every(isCustomer)) throw new Error("Respuesta de datos no válida.");
   const customerIds = parsed.customers.map((customer) => customer.id);
   const contractIds = parsed.customers.flatMap((customer) => customer.contracts.map((contract: { id: string }) => contract.id));
-  if (new Set(customerIds).size !== customerIds.length || new Set(contractIds).size !== contractIds.length) throw new Error("Duplicate record identifiers");
-  return (parsed.customers as Customer[]).map((customer) => ({
-    ...customer,
-    customId: normalizeCustomerId(customer.customId),
-  }));
+  if (new Set(customerIds).size !== customerIds.length || new Set(contractIds).size !== contractIds.length) throw new Error("Respuesta de datos no válida.");
+  return {
+    version: Number(parsed.version),
+    customers: (parsed.customers as Customer[]).map((customer) => ({ ...customer, customId: normalizeCustomerId(customer.customId) })),
+  };
 }
 
-function notify() {
-  listeners.forEach((listener) => listener());
-}
+function notify() { listeners.forEach((listener) => listener()); }
+function storageFailure(message: string) { persistence = { status: "unavailable", message }; }
 
-function storageFailure(message: string) {
-  persistence = { status: "unavailable", message };
-}
-
-function initialize() {
-  if (initialized || typeof window === "undefined") return;
-  initialized = true;
-  try {
-    const storedRevision = window.localStorage.getItem(CUSTOMER_DATASET_REVISION_KEY);
-    const resetToSingleCustomer = storedRevision !== CUSTOMER_DATASET_REVISION;
-    const raw = window.localStorage.getItem(CUSTOMER_STORAGE_KEY);
-    customers = resetToSingleCustomer || raw === null ? demoCustomers : readCustomers(raw);
-    if (resetToSingleCustomer || raw === null) {
-      window.localStorage.setItem(CUSTOMER_STORAGE_KEY, JSON.stringify({ version: 1, customers }));
-      window.localStorage.setItem(CUSTOMER_DATASET_REVISION_KEY, CUSTOMER_DATASET_REVISION);
-    }
-    persistence = { status: "saved", message: "" };
-  } catch {
-    storageFailure("No se pudieron cargar los datos guardados. Los cambios se conservarán en esta sesión hasta que el almacenamiento vuelva a estar disponible.");
+async function requestSnapshot(method: "GET" | "PUT", data?: WorkspaceSnapshot): Promise<WorkspaceSnapshot> {
+  const response = await fetch("/api/erp/workspace", {
+    method, credentials: "same-origin", cache: "no-store",
+    headers: method === "PUT" ? { "Content-Type": "application/json" } : undefined,
+    body: data === undefined ? undefined : JSON.stringify(data),
+    redirect: "error",
+  });
+  const body: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    const code = isRecord(body) && typeof body.code === "string" ? body.code : "";
+    const message = response.status === 401 ? "Tu sesión terminó. Vuelve a iniciar sesión." : response.status === 403 ? "No tienes permiso para guardar estos cambios o debes completar la verificación de tu cuenta." : response.status === 409 ? "Otra sesión actualizó los datos. Se cargó la versión del servidor; revisa tus cambios antes de volver a guardarlos." : "No se confirmó el guardado en el servidor. Revisa los datos e inténtalo de nuevo.";
+    throw new PersistenceError(message, response.status, code);
   }
+  return readSnapshot(body);
 }
 
-function receiveStorage(event: StorageEvent) {
-  if (event.key !== CUSTOMER_STORAGE_KEY && event.key !== null) return;
+async function loadSnapshot(showLoading = true): Promise<void> {
+  const requestedGeneration = generation;
+  if (showLoading) { persistence = serverPersistence; notify(); }
   try {
-    customers = event.newValue === null ? demoCustomers : readCustomers(event.newValue);
+    const snapshot = await requestSnapshot("GET");
+    if (requestedGeneration !== generation) return;
+    customers = snapshot.customers;
+    version = snapshot.version;
+    initialized = true;
     persistence = { status: "saved", message: "" };
-  } catch {
-    storageFailure("No se pudieron leer los cambios guardados en otra pestaña. Los datos de esta sesión se conservaron.");
+  } catch (error) {
+    if (requestedGeneration !== generation) return;
+    initialized = false;
+    if (error instanceof PersistenceError && (error.status === 401 || ["MFA_REQUIRED", "PASSWORD_CHANGE_REQUIRED"].includes(error.code))) { customers = []; version = 0; }
+    storageFailure(error instanceof PersistenceError ? error.message : "No se pudieron cargar los datos del servidor. Recarga la página para volver a intentarlo.");
+    throw error;
+  } finally { if (requestedGeneration === generation) notify(); }
+}
+
+function initialize(): Promise<void> {
+  if (typeof window === "undefined" || initialized) return Promise.resolve();
+  if (!loading) loading = loadSnapshot().finally(() => { loading = null; });
+  return loading;
+}
+
+export function retryCustomerWorkspace(): Promise<void> {
+  if (pendingSaves > 0) return saveQueue;
+  if (!loading) loading = loadSnapshot().finally(() => { loading = null; });
+  return loading;
+}
+
+function refreshWhenVisible() {
+  if (document.visibilityState === "visible" && pendingSaves === 0 && !loading) {
+    loading = loadSnapshot(false).catch(() => undefined).finally(() => { loading = null; });
   }
-  notify();
 }
 
 function subscribe(listener: () => void) {
   const firstSubscriber = listeners.size === 0;
   listeners.add(listener);
-  if (firstSubscriber && persistence.status === "saved") initialized = false;
-  initialize();
-  if (firstSubscriber) window.addEventListener("storage", receiveStorage);
+  if (firstSubscriber) {
+    void initialize().catch(() => undefined);
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+  }
   return () => {
     listeners.delete(listener);
-    if (listeners.size === 0) window.removeEventListener("storage", receiveStorage);
+    if (listeners.size === 0) {
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    }
   };
 }
 
-export const setCustomers: Dispatch<SetStateAction<Customer[]>> = (update) => {
-  initialize();
-  const updated = (typeof update === "function" ? update(customers) : update).map((customer) => ({
-    ...customer,
-    customId: normalizeCustomerId(customer.customId),
-  }));
-  if (updated === customers) return;
-  customers = updated;
-  try {
-    window.localStorage.setItem(CUSTOMER_STORAGE_KEY, JSON.stringify({ version: 1, customers }));
-    window.localStorage.setItem(CUSTOMER_DATASET_REVISION_KEY, CUSTOMER_DATASET_REVISION);
-    persistence = { status: "saved", message: "" };
-  } catch {
-    storageFailure("No se pudieron guardar los cambios en este navegador. Los cambios están disponibles en esta sesión y se perderán al cerrar o recargar la página.");
-  }
+/** Resolve only after the server commits. Consumers can await this to announce
+ * success. Saves are serialized, using the latest committed version and state.
+ * No customer data, credentials or tokens are persisted by JavaScript storage.
+ */
+export function commitCustomers(update: SetStateAction<Customer[]>): Promise<void> {
+  const requestedGeneration = generation;
+  const requestedFailureGeneration = failedSaveGeneration;
+  pendingSaves += 1;
+  persistence = { status: "loading", message: "Guardando los cambios en el servidor…" };
   notify();
-};
+  const operation = saveQueue.then(async () => {
+    if (requestedGeneration !== generation || requestedFailureGeneration !== failedSaveGeneration) throw new Error("No se guardaron los cambios pendientes. Revisa la versión del servidor.");
+    await initialize();
+    if (!initialized) throw new Error("Los datos aún no están disponibles. Recarga antes de editar.");
+    const proposed = typeof update === "function" ? update(customers) : update;
+    if (proposed === customers) return;
+    const normalized = proposed.map((customer) => ({ ...customer, customId: normalizeCustomerId(customer.customId) }));
+    try {
+      const snapshot = await requestSnapshot("PUT", { customers: normalized, version });
+      if (requestedGeneration !== generation) return;
+      customers = snapshot.customers;
+      version = snapshot.version;
+      persistence = { status: "saved", message: "" };
+    } catch (error) {
+      if (requestedGeneration !== generation) throw error;
+      failedSaveGeneration += 1;
+      // A lost response may follow a committed write. Re-read; never blindly retry.
+      try { await loadSnapshot(false); } catch { /* The last confirmed data stays in memory. */ }
+      const message = error instanceof PersistenceError ? error.message : "No se confirmó el guardado en el servidor. Revisa los datos antes de volver a intentarlo.";
+      storageFailure(message);
+      throw new Error(message);
+    } finally { notify(); }
+  });
+  const completed = operation.catch((error: unknown) => {
+    if (requestedGeneration === generation) {
+      if (requestedFailureGeneration === failedSaveGeneration) failedSaveGeneration += 1;
+      if (persistence.status !== "unavailable") storageFailure(error instanceof Error ? error.message : "No se pudieron guardar los cambios.");
+      notify();
+      throw new Error(persistence.message);
+    }
+    throw error;
+  }).finally(() => { pendingSaves -= 1; notify(); });
+  saveQueue = completed.catch(() => undefined);
+  return completed;
+}
+
+export const setCustomers: Dispatch<SetStateAction<Customer[]>> = (update) => { void commitCustomers(update).catch(() => undefined); };
+
+/** Useful for explicit session transitions; full-page logout also discards memory. */
+export function resetCustomerWorkspace() {
+  generation += 1;
+  failedSaveGeneration += 1;
+  customers = [];
+  version = 0;
+  initialized = false;
+  persistence = serverPersistence;
+  notify();
+}
 
 export function saveCustomerDetails(current: Customer[], draft: Customer): Customer[] {
   if (!current.some((customer) => customer.id === draft.id)) return [draft, ...current];
@@ -202,7 +276,7 @@ export function appendCustomerTickets(current: Customer[], updated: Customer): C
 }
 
 export function useCustomers(): [Customer[], Dispatch<SetStateAction<Customer[]>>] {
-  return [useSyncExternalStore(subscribe, () => customers, () => demoCustomers), setCustomers];
+  return [useSyncExternalStore(subscribe, () => customers, () => serverCustomers), setCustomers];
 }
 
 export function useCustomerPersistenceStatus(): CustomerPersistenceStatus {

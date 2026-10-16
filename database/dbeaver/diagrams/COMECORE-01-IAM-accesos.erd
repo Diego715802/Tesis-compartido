@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<diagram version="1" name="COMECORE - IAM y accesos">
+  <entities>
+    <data-source id="postgres-jdbc-1a121c52ebc-68bb2c9358d996f1">
+      <entity id="1" name="app_users" fq-name="iam.app_users" showAttrs="ALL">
+        <path name="iam" />
+        <path name="comecore" />
+      </entity>
+      <entity id="2" name="organization_memberships" fq-name="iam.organization_memberships" showAttrs="ALL">
+        <path name="iam" />
+        <path name="comecore" />
+      </entity>
+      <entity id="3" name="organizations" fq-name="iam.organizations" showAttrs="ALL">
+        <path name="iam" />
+        <path name="comecore" />
+      </entity>
+    </data-source>
+  </entities>
+  <relations>
+    <relation name="organization_memberships_organization_id_fkey" fq-name="iam.organization_memberships.organization_memberships_organization_id_fkey" type="fk" pk-ref="3" fk-ref="2" />
+    <relation name="organization_memberships_user_id_fkey" fq-name="iam.organization_memberships.organization_memberships_user_id_fkey" type="fk" pk-ref="1" fk-ref="2" />
+  </relations>
+  <notes />
+</diagram>

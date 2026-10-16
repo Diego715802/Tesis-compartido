@@ -1,0 +1,11 @@
+export type ThemeId = "normal" | "dia-de-muertos" | "navidad" | "reyes-magos" | "san-valentin" | "dia-de-la-bandera" | "dia-de-la-madre" | "dia-de-la-mujer" | "halloween" | "buen-fin" | "black-friday" | "mes-patrio";
+export type ThemeSchedule = { theme: ThemeId; enabled: boolean; start: string; end: string };
+export type Appearance = { mode: "manual" | "automatic"; manualTheme: ThemeId; animations: boolean; schedules: ThemeSchedule[]; timeZone: string; updatedAt?: string | null; updatedBy?: string | null };
+export type ActiveAppearance = { activeTheme: ThemeId; animations: boolean; mode: "manual" | "automatic"; timeZone: string; nextChangeAt: number | null; serverTime: number };
+export const CMC_TIME_ZONE: string;
+export const cmcThemes: { id: ThemeId; name: string; description: string; accent: string; motif: string; legacy?: boolean }[];
+export function themeById(id: string): typeof cmcThemes[number];
+export function defaultAppearance(legacyId?: string): Appearance;
+export function mexicoTimestamp(value: string): number;
+export function sanitizeAppearance(input: unknown): Appearance;
+export function resolveAppearance(config: Appearance, now?: number): ActiveAppearance;

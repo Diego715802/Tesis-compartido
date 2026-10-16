@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useCustomers } from "../clientes/customer-store";
+import { useMemo, useRef, useState } from "react";
+import { commitCustomers, useCustomers } from "../clientes/customer-store";
 import type { CustomerContract, ServiceStatus } from "../clientes/customer-types";
 import { contractColumns, type ContractColumn } from "./contract-list";
 import { contractDate, contractSerial, emptyFilterGroup, exportContractsCsv, filterContracts, flattenContracts, type ContractRow, type FilterGroup } from "./contract-model";
@@ -10,7 +10,7 @@ import type { ContractInspectionKind } from "./contract-inspection-dialog";
 import type { ContractSearchMode, ContractSort } from "./contract-toolbar";
 
 export function useContractWorkbench() {
-  const [customers, setCustomers] = useCustomers();
+  const [customers] = useCustomers();
   const rows = useMemo(() => flattenContracts(customers), [customers]);
   const [query, setQuery] = useState("");
   const [searchMode, setSearchMode] = useState<ContractSearchMode>("all");
@@ -29,6 +29,9 @@ export function useContractWorkbench() {
   const [confirm, setConfirm] = useState<{ key: string; status?: ServiceStatus } | null>(null);
   const [notice, setNotice] = useState<{ message: string; error?: boolean } | null>(null);
   const [undo, setUndo] = useState<ContractRow | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const mutationInFlight = useRef(false);
   const filtered = useMemo(() => {
     const matches = filterContracts(rows, query, filters, searchMode).filter((row) => status === "Todos" || row.contract.status === status);
     const value = (row: ContractRow) => sort === "name" ? row.customer.name : sort === "ip" ? row.contract.ipAddress : sort === "date" ? contractDate(row) : contractSerial(row.contract);
@@ -43,9 +46,25 @@ export function useContractWorkbench() {
   const detailRow = findRow(detail);
   const inspectionRow = findRow(inspection?.key ?? null);
 
-  function mutate(operation: (current: typeof customers) => typeof customers, message: string) {
-    try { setCustomers(operation); setNotice({ message }); return true; }
-    catch (error) { setNotice({ message: error instanceof Error ? error.message : "No se pudo actualizar el contrato.", error: true }); return false; }
+  async function mutate(operation: (current: typeof customers) => typeof customers, message: string): Promise<boolean> {
+    if (mutationInFlight.current) return false;
+    mutationInFlight.current = true;
+    setSaving(true);
+    setSaveError("");
+    setNotice(null);
+    try {
+      await commitCustomers(operation);
+      setNotice({ message });
+      return true;
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "No se pudo actualizar el contrato.";
+      setSaveError(detail);
+      setNotice({ message: detail, error: true });
+      return false;
+    } finally {
+      mutationInFlight.current = false;
+      setSaving(false);
+    }
   }
   function resetView() { setPage(0); setSelection(new Set()); }
   function toggle(key: string) { setSelection((previous) => { const next = new Set(previous); if (next.has(key)) next.delete(key); else next.add(key); return next; }); }
@@ -55,19 +74,22 @@ export function useContractWorkbench() {
   function save(customerId: string, contract: CustomerContract) {
     return mutate((current) => saveContract(current, customerId, contract, form !== "create" ? form ?? undefined : undefined), form === "create" ? "Contrato creado." : "Contrato actualizado.");
   }
-  function applyUpdates(updates: { key: string; changes: Partial<CustomerContract> }[], message: string) {
-    const success = mutate((current) => updateContracts(current, updates), message);
+  async function applyUpdates(updates: { key: string; changes: Partial<CustomerContract> }[], message: string) {
+    const success = await mutate((current) => updateContracts(current, updates), message);
     if (success) setDialog(null);
     return success;
   }
-  function confirmAction() {
+  async function confirmAction() {
     const row = findRow(confirm?.key ?? null);
     if (!row) { setConfirm(null); return; }
-    if (confirm?.status) applyUpdates([{ key: row.key, changes: { status: confirm.status } }], `Contrato ${confirm.status.toLocaleLowerCase()}.`);
-    else if (mutate((current) => deleteContract(current, row.key), "Contrato eliminado.")) { setUndo(row); setDetail(null); setSelection((previous) => new Set([...previous].filter((key) => key !== row.key))); }
+    const success = confirm?.status
+      ? await applyUpdates([{ key: row.key, changes: { status: confirm.status } }], `Contrato ${confirm.status.toLocaleLowerCase()}.`)
+      : await mutate((current) => deleteContract(current, row.key), "Contrato eliminado.");
+    if (!success) return;
+    if (!confirm?.status) { setUndo(row); setDetail(null); setSelection((previous) => new Set([...previous].filter((key) => key !== row.key))); }
     setConfirm(null);
   }
-  function undoDelete() { if (undo && mutate((current) => restoreContract(current, undo), "Contrato restaurado.")) setUndo(null); }
+  async function undoDelete() { if (undo && await mutate((current) => restoreContract(current, undo), "Contrato restaurado.")) setUndo(null); }
   function download() {
     const data = selectedRows.length ? selectedRows : filtered;
     const url = URL.createObjectURL(new Blob(["\uFEFF", exportContractsCsv(data)], { type: "text/csv;charset=utf-8" }));
@@ -76,7 +98,7 @@ export function useContractWorkbench() {
   }
   return {
     customers, rows, query, searchMode, filters, status, sort, descending, columns, currentPage, pageSize, visible, filtered, selected, selectedRows,
-    form, formRow, detailRow, inspection, inspectionRow, dialog, confirm, confirmRow: findRow(confirm?.key ?? null), notice, undo,
+    form, formRow, detailRow, inspection, inspectionRow, dialog, confirm, confirmRow: findRow(confirm?.key ?? null), notice, undo, saving, saveError,
     setForm, setDetail, setInspection, setDialog, setConfirm, setNotice, setUndo,
     onQuery: (value: string) => { setQuery(value); resetView(); },
     onSearchMode: (value: ContractSearchMode) => { setSearchMode(value); resetView(); },

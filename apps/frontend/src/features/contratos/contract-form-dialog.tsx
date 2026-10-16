@@ -29,7 +29,7 @@ import { blankContract, cleanContract, contractFormOptions, errorTab, validateCo
 export type ContractFormDialogProps = {
   open: boolean;
   onClose: () => void;
-  onSave: (customerId: string, contract: CustomerContract) => void | boolean;
+  onSave: (customerId: string, contract: CustomerContract) => void | boolean | Promise<void | boolean>;
   customers: Customer[];
   initialCustomerId?: string;
   editing?: { customerId: string; contract: CustomerContract } | null;
@@ -51,6 +51,8 @@ function ContractFormSession({ onClose, onSave, customers, initialCustomerId, ed
     const defaults = blankContract(customers, customer);
     return editing ? { ...defaults, ...editing.contract, serialNumber: editing.contract.serialNumber || editing.contract.id, createdAt: editing.contract.createdAt ?? customer?.createdAt ?? defaults.createdAt, startsAt: (editing.contract.startsAt ?? editing.contract.createdAt ?? customer?.createdAt ?? defaults.startsAt)?.slice(0, 10) } : defaults;
   });
+  const [saving, setSaving] = useState(false);
+  const [requestError, setRequestError] = useState("");
   const [errors, setErrors] = useState<ContractFormErrors>({});
   const customer = customers.find((item) => item.id === customerId);
   const options = contractFormOptions(customers, contract.server, contract.olt);
@@ -61,8 +63,10 @@ function ContractFormSession({ onClose, onSave, customers, initialCustomerId, ed
     setErrors((current) => Object.fromEntries(Object.entries(current).filter(([name]) => !Object.hasOwn(changes, name) && !dependentErrors.includes(name))));
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
+    setRequestError("");
     const cleaned = cleanContract(contract);
     const validation = validateContract(cleaned, customerId, customers, editing);
     if (Object.keys(validation).length) {
@@ -72,16 +76,20 @@ function ContractFormSession({ onClose, onSave, customers, initialCustomerId, ed
       window.requestAnimationFrame(() => document.getElementById(`contract-field-${field}`)?.focus());
       return;
     }
-    if (onSave(customerId, { ...cleaned, updatedAt: new Date().toISOString() }) === false) return;
-    onClose();
+    setSaving(true);
+    try {
+      if (await onSave(customerId, { ...cleaned, updatedAt: new Date().toISOString() }) === false) { setRequestError("El contrato no se guardó. Revisa el mensaje del servidor antes de volver a intentarlo."); return; }
+      onClose();
+    } catch { setRequestError("No se confirmó el guardado del contrato. Revisa los datos y vuelve a intentarlo."); }
+    finally { setSaving(false); }
   }
 
   const fieldProps = { contract, errors, options, onChange: patch };
-  return <Dialog open onClose={onClose} fullScreen={mobile} maxWidth={false} aria-labelledby="contract-form-title" slotProps={{ paper: { sx: { width: mobile ? "100%" : "min(1500px,calc(100vw - 40px))", maxWidth: "none", maxHeight: mobile ? "100dvh" : "calc(100dvh - 32px)", borderRadius: 0 } } }}>
+  return <Dialog open onClose={saving ? undefined : onClose} fullScreen={mobile} maxWidth={false} aria-labelledby="contract-form-title" slotProps={{ paper: { sx: { width: mobile ? "100%" : "min(1500px,calc(100vw - 40px))", maxWidth: "none", maxHeight: mobile ? "100dvh" : "calc(100dvh - 32px)", borderRadius: 0 } } }}>
     <Box component="form" noValidate onSubmit={submit} sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       <DialogTitle component="div" sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, py: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
         <Typography id="contract-form-title" component="h2" sx={{ fontSize: 18, fontWeight: 600 }}>{editing ? "Editar contrato" : "Nuevo contrato"}</Typography>
-        <IconButton aria-label="Cerrar formulario de contrato" onClick={onClose}><CloseRoundedIcon /></IconButton>
+        <IconButton aria-label="Cerrar formulario de contrato" onClick={onClose} disabled={saving}><CloseRoundedIcon /></IconButton>
       </DialogTitle>
       <Tabs aria-label="Configuración del contrato" value={tab} onChange={(_, value: ContractFormTab) => setTab(value)} variant="scrollable" scrollButtons="auto" sx={{ px: { xs: 0.5, sm: 2 }, borderBottom: "1px solid", borderColor: "divider", "& .MuiTab-root": { minHeight: 56, px: 2, fontSize: 13 } }}>
         <Tab id="contract-tab-basic" aria-controls="contract-panel-basic" value="basic" label="Básico" icon={<DescriptionOutlinedIcon />} iconPosition="start" />
@@ -90,6 +98,7 @@ function ContractFormSession({ onClose, onSave, customers, initialCustomerId, ed
       </Tabs>
       <DialogContent sx={{ flex: 1, p: { xs: 1.5, sm: 2.5 }, minWidth: 0 }}>
         {!customers.length && <Alert severity="warning" sx={{ mb: 2 }}>Registra un cliente antes de crear un contrato. <Link href="/clientes">Ir a Clientes</Link></Alert>}
+        {requestError && <Alert severity="error" sx={{ mb: 2 }}>{requestError}</Alert>}
         {saveError && <Alert severity="error" sx={{ mb: 2 }}>{saveError}</Alert>}
         {Object.keys(errors).length > 0 && <Alert severity="error" sx={{ mb: 2 }}>Revisa los campos señalados antes de guardar el contrato.</Alert>}
         <Box role="tabpanel" id={`contract-panel-${tab}`} aria-labelledby={`contract-tab-${tab}`}>
@@ -99,8 +108,8 @@ function ContractFormSession({ onClose, onSave, customers, initialCustomerId, ed
         </Box>
       </DialogContent>
       <DialogActions sx={{ flexWrap: "wrap", gap: 0.75, px: { xs: 1.5, sm: 2.5 }, py: 1.5, borderTop: "1px solid", borderColor: "divider" }}>
-        <Button color="inherit" onClick={onClose}>Cancelar</Button>
-        <Button type="submit" variant="contained" disabled={!customers.length} startIcon={<SaveOutlinedIcon />} sx={{ boxShadow: "none" }}>{editing ? "Actualizar" : "Crear"}</Button>
+        <Button color="inherit" onClick={onClose} disabled={saving}>Cancelar</Button>
+        <Button type="submit" variant="contained" disabled={saving || !customers.length} startIcon={<SaveOutlinedIcon />} sx={{ boxShadow: "none" }}>{saving ? "Guardando…" : editing ? "Actualizar" : "Crear"}</Button>
       </DialogActions>
     </Box>
   </Dialog>;

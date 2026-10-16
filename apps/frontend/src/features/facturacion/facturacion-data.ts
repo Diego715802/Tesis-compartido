@@ -64,6 +64,17 @@ export type ReceiptRecord = {
   client: string;
   status: "Procesado" | "Pendiente";
   createdAt: string;
+  invoiceNumber: number;
+  accountCode: string;
+  balance: number;
+  availableCredit: number;
+  unpaidInvoices: number;
+  amountDue: number;
+  invoiceTotal: number;
+  invoiceIssuedAt: string;
+  invoiceStatus: "Anulada" | "Vigente";
+  source: "Carga manual" | "Portal del cliente";
+  viewed: boolean;
 };
 
 export type CashAuditRecord = {
@@ -79,13 +90,7 @@ export type CashAuditRecord = {
 };
 
 export const billingViewItems: readonly { value: BillingView; label: string }[] = [
-  { value: "borradores", label: "Borradores" },
-  { value: "emitidas", label: "Emitidas" },
-  { value: "notas", label: "Notas de crédito" },
-  { value: "pagos", label: "Pagos" },
-  { value: "promesas", label: "Promesas de pago" },
   { value: "comprobantes", label: "Comprobantes de Pago" },
-  { value: "arqueos", label: "Arqueos de caja" },
 ] as const;
 
 const clients = [
@@ -149,7 +154,23 @@ export const paymentPromises: PaymentPromiseRecord[] = clients.map((client, inde
 }));
 
 export const paymentReceipts: ReceiptRecord[] = [
-  { id: 848, client: clients[0], status: "Procesado", createdAt: "16/07/2026 21:58:55" },
+  {
+    id: 848,
+    client: clients[0],
+    status: "Procesado",
+    createdAt: "16/07/2026 21:58:55",
+    invoiceNumber: 2218,
+    accountCode: "TL-0.29",
+    balance: 0,
+    availableCredit: 0,
+    unpaidInvoices: 0,
+    amountDue: 0,
+    invoiceTotal: 2200,
+    invoiceIssuedAt: "01/06/2026",
+    invoiceStatus: "Anulada",
+    source: "Carga manual",
+    viewed: true,
+  },
 ];
 
 export const cashAudits: CashAuditRecord[] = [

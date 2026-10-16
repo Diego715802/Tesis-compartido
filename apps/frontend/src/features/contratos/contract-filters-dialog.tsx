@@ -45,7 +45,8 @@ type ContractFiltersDialogProps = {
 
 type SavedFilter = { id: string; name: string; group: FilterGroup };
 type SavedState = { filters: SavedFilter[]; warning: string };
-const storageKey = "comecore.contract-filters.v1";
+// Filter criteria can contain customer identifiers; retain them only in memory.
+let sessionFilters: SavedFilter[] = [];
 const operatorLabels: Record<FilterOperator, string> = {
   contains: "Contiene",
   eq: "Igual a",
@@ -88,23 +89,7 @@ function validGroup(value: unknown, depth = 0, ids = new Set<string>()): value i
 }
 
 function readSavedFilters(): SavedState {
-  if (typeof window === "undefined") return { filters: [], warning: "" };
-  try {
-    const raw = window.localStorage.getItem(storageKey);
-    if (raw === null) return { filters: [], warning: "" };
-    const parsed: unknown = JSON.parse(raw);
-    if (!isRecord(parsed) || parsed.version !== 1 || !Array.isArray(parsed.filters) || parsed.filters.length > 100) throw new Error("Invalid saved filters");
-    const ids = new Set<string>();
-    const filters = parsed.filters.filter((filter: unknown): filter is SavedFilter => {
-      if (!isRecord(filter) || typeof filter.id !== "string" || !filter.id || ids.has(filter.id) || typeof filter.name !== "string" || !filter.name.trim() || filter.name.length > 100 || !validGroup(filter.group)) return false;
-      ids.add(filter.id);
-      return true;
-    });
-    if (filters.length !== parsed.filters.length) throw new Error("Invalid saved filter");
-    return { filters, warning: "" };
-  } catch {
-    return { filters: [], warning: "No se pudieron leer los filtros guardados en este navegador." };
-  }
+  return { filters: sessionFilters.map((filter) => ({ ...filter, group: cloneGroup(filter.group) })), warning: "Los filtros se conservan mientras esta página permanezca abierta." };
 }
 
 function RuleEditor({ rule, rows, onChange, onDelete }: { rule: FilterRule; rows: ContractRow[]; onChange: (rule: FilterRule) => void; onDelete: () => void }) {
@@ -182,13 +167,8 @@ function FilterSession({ onClose, onApply, value, rows }: Omit<ContractFiltersDi
   const [notice, setNotice] = useState("");
 
   function persist(filters: SavedFilter[]) {
-    let warning = "";
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify({ version: 1, filters }));
-    } catch {
-      warning = "El filtro está disponible en esta sesión. No se pudo guardar en este navegador.";
-    }
-    setSaved({ filters, warning });
+    sessionFilters = filters.map((filter) => ({ ...filter, group: cloneGroup(filter.group) }));
+    setSaved({ filters: sessionFilters, warning: "Los filtros se conservan mientras esta página permanezca abierta." });
   }
 
   function saveFilter() {
@@ -204,7 +184,7 @@ function FilterSession({ onClose, onApply, value, rows }: Omit<ContractFiltersDi
     persist(existing ? saved.filters.map((filter) => filter.id === existing.id ? next : filter) : [...saved.filters, next]);
     setSelectedId(next.id);
     setError("");
-    setNotice("Filtro guardado.");
+    setNotice("Filtro guardado para esta página.");
   }
 
   function loadFilter() {
@@ -233,9 +213,9 @@ function FilterSession({ onClose, onApply, value, rows }: Omit<ContractFiltersDi
           <TextField size="small" label="Nombre del filtro" value={filterName} onChange={(event) => setFilterName(event.target.value)} sx={{ gridColumn: { xs: "1 / 3", md: "auto" } }} />
           <Tooltip title="Guardar filtro"><IconButton aria-label="Guardar filtro" color="primary" onClick={saveFilter}><SaveOutlinedIcon /></IconButton></Tooltip>
         </Box>
-        {saved.warning && <Alert severity="warning" sx={{ mb: 2 }}>{saved.warning}</Alert>}
+        {saved.warning && <Alert severity="info" sx={{ mb: 2 }}>{saved.warning}</Alert>}
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {notice && !saved.warning && <Alert severity="success" sx={{ mb: 2 }}>{notice}</Alert>}
+        {notice && <Alert severity="success" sx={{ mb: 2 }}>{notice}</Alert>}
         <GroupEditor group={draft} depth={0} rows={rows} onChange={(group) => { setDraft(group); setError(""); setNotice(""); }} />
       </DialogContent>
       <DialogActions sx={{ px: { xs: 1.5, sm: 2.5 }, py: 1.5, borderTop: "1px solid", borderColor: "divider", flexWrap: "wrap", gap: 0.5 }}><Button color="inherit" onClick={() => { setDraft(emptyFilterGroup()); setError(""); setNotice(""); }}>Limpiar filtros</Button><Box sx={{ flex: 1 }} /><Button color="inherit" onClick={onClose}>Cancelar</Button><Button variant="contained" startIcon={<SearchRoundedIcon />} onClick={apply} sx={{ boxShadow: "none" }}>Buscar</Button></DialogActions>

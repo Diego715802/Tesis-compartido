@@ -100,6 +100,10 @@ export class MikrotikService {
         endpoint,
       );
     }
+    const hostHash = process.env.MIKROTIK_SSH_HOST_HASH?.trim().toLowerCase();
+    if (!hostHash || !/^[a-f0-9]{64}$/.test(hostHash) || !Number.isInteger(port) || port < 1 || port > 65535) {
+      return this.emptyTelemetry('configuration_required', 'Configura y verifica la huella SSH del equipo antes de conectar.', endpoint);
+    }
 
     try {
       const outputs = await this.collectOverSsh({
@@ -110,10 +114,8 @@ export class MikrotikService {
         privateKey: privateKeyPath ? readFileSync(privateKeyPath) : undefined,
         readyTimeout: 8_000,
         keepaliveInterval: 4_000,
-        hostHash: process.env.MIKROTIK_SSH_HOST_HASH ? 'sha256' : undefined,
-        hostVerifier: process.env.MIKROTIK_SSH_HOST_HASH
-          ? (hash: string) => hash === process.env.MIKROTIK_SSH_HOST_HASH
-          : undefined,
+        hostHash: 'sha256',
+        hostVerifier: (hash: string) => hash === hostHash,
       });
       const telemetry = this.normalizeSshOutputs(outputs, endpoint);
       this.cachedTelemetry = { expiresAt: Date.now() + 4_000, value: telemetry };

@@ -1,7 +1,5 @@
 "use client";
 
-import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -9,8 +7,6 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import IconButton from "@mui/material/IconButton";
-import InputAdornment from "@mui/material/InputAdornment";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
@@ -78,68 +74,19 @@ export function EditCustomerDialog({ customer, onClose, onSave }: EditCustomerDi
 type PasswordDialogProps = {
   customer: Customer;
   onClose: () => void;
-  onSave: () => void;
 };
 
-export function PasswordDialog({ customer, onClose, onSave }: PasswordDialogProps) {
-  const [password, setPassword] = useState("");
-  const [confirmation, setConfirmation] = useState("");
-  const [visible, setVisible] = useState(false);
-  const [attempted, setAttempted] = useState(false);
-  const mismatch = confirmation.length > 0 && password !== confirmation;
-  const valid = password.length >= 8 && password === confirmation;
-  const passwordError = attempted && password.length < 8;
-  const confirmationError = attempted && (confirmation.length === 0 || password !== confirmation);
-
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!valid) {
-      setAttempted(true);
-      const targetId = password.length < 8 ? "password-field-new" : "password-field-confirmation";
-      window.setTimeout(() => document.getElementById(targetId)?.focus(), 0);
-      return;
-    }
-    onSave();
-  }
-
+export function PasswordDialog({ customer, onClose }: PasswordDialogProps) {
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="xs">
-      <Box component="form" noValidate onSubmit={handleSubmit}>
-        <DialogTitle sx={{ pb: 0.75 }}>Cambiar contraseña</DialogTitle>
-        <DialogContent>
-        <Typography sx={{ mb: 2.25, color: "text.secondary", fontSize: "0.78rem", lineHeight: 1.55 }}>
-          Define una nueva contraseña para el acceso al portal de {customer.name}.
+    <Dialog open onClose={onClose} fullWidth maxWidth="xs" aria-labelledby="portal-password-title">
+      <DialogTitle id="portal-password-title">Acceso al portal del cliente</DialogTitle>
+      <DialogContent>
+        <Typography sx={{ color: "text.secondary", fontSize: "0.88rem", lineHeight: 1.6 }}>
+          El acceso al portal de {customer.name} todavía no está conectado a un servicio de autenticación.
+          El cambio de contraseña estará disponible cuando se integre ese portal.
         </Typography>
-        <Box sx={{ display: "grid", gap: 1.5 }}>
-          <TextField
-            id="password-field-new"
-            autoFocus
-            required
-            type={visible ? "text" : "password"}
-            label="Nueva contraseña"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            error={passwordError}
-            helperText={passwordError ? "La contraseña debe tener al menos 8 caracteres." : "Mínimo 8 caracteres"}
-            slotProps={{ input: { endAdornment: <InputAdornment position="end"><IconButton aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"} onClick={() => setVisible((value) => !value)} edge="end">{visible ? <VisibilityOffOutlinedIcon /> : <VisibilityOutlinedIcon />}</IconButton></InputAdornment> } }}
-          />
-          <TextField
-            id="password-field-confirmation"
-            required
-            type={visible ? "text" : "password"}
-            label="Confirmar contraseña"
-            value={confirmation}
-            onChange={(event) => setConfirmation(event.target.value)}
-            error={confirmationError || mismatch}
-            helperText={confirmationError ? (confirmation.length === 0 ? "Confirma la nueva contraseña." : "Las contraseñas no coinciden") : mismatch ? "Las contraseñas no coinciden" : " "}
-          />
-        </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2.5 }}>
-          <Button onClick={onClose} color="inherit">Cancelar</Button>
-          <Button type="submit" variant="contained" sx={{ boxShadow: "none" }}>Actualizar contraseña</Button>
-        </DialogActions>
-      </Box>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2.5 }}><Button onClick={onClose} variant="contained" autoFocus sx={{ boxShadow: "none" }}>Entendido</Button></DialogActions>
     </Dialog>
   );
 }

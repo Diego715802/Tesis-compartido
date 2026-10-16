@@ -1,3 +1,4 @@
+import { requireIdentity } from "@/lib/auth/server";
 import type { Metadata } from "next";
 import { ClientesModule } from "@/features/clientes/clientes-module";
 
@@ -6,6 +7,7 @@ export const metadata: Metadata = {
   description: "Módulo Clientes de ComeCore ERP.",
 };
 
-export default function ClientesPage() {
+export default async function ClientesPage() {
+  await requireIdentity("clientes:read");
   return <ClientesModule />;
 }

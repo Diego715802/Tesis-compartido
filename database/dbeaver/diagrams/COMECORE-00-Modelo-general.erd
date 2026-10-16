@@ -1,0 +1,77 @@
+<?xml version='1.0' encoding='utf-8'?>
+<diagram version="1" name="COMECORE - Modelo general">
+  <entities>
+    <data-source id="postgres-jdbc-1a121c52ebc-68bb2c9358d996f1">
+      <entity id="1" name="schema_migrations" fq-name="app_private.schema_migrations" showAttrs="KEYS">
+        <path name="app_private" />
+        <path name="comecore" />
+      </entity>
+      <entity id="2" name="customer_events" fq-name="audit.customer_events" showAttrs="KEYS">
+        <path name="audit" />
+        <path name="comecore" />
+      </entity>
+      <entity id="3" name="customer_accounts" fq-name="crm.customer_accounts" showAttrs="KEYS">
+        <path name="crm" />
+        <path name="comecore" />
+      </entity>
+      <entity id="4" name="customer_addresses" fq-name="crm.customer_addresses" showAttrs="KEYS">
+        <path name="crm" />
+        <path name="comecore" />
+      </entity>
+      <entity id="5" name="customer_assignments" fq-name="crm.customer_assignments" showAttrs="KEYS">
+        <path name="crm" />
+        <path name="comecore" />
+      </entity>
+      <entity id="6" name="customer_billing_profiles" fq-name="crm.customer_billing_profiles" showAttrs="KEYS">
+        <path name="crm" />
+        <path name="comecore" />
+      </entity>
+      <entity id="7" name="customer_contacts" fq-name="crm.customer_contacts" showAttrs="KEYS">
+        <path name="crm" />
+        <path name="comecore" />
+      </entity>
+      <entity id="8" name="customer_devices" fq-name="crm.customer_devices" showAttrs="KEYS">
+        <path name="crm" />
+        <path name="comecore" />
+      </entity>
+      <entity id="9" name="customer_payment_gateways" fq-name="crm.customer_payment_gateways" showAttrs="KEYS">
+        <path name="crm" />
+        <path name="comecore" />
+      </entity>
+      <entity id="10" name="customers" fq-name="crm.customers" showAttrs="KEYS">
+        <path name="crm" />
+        <path name="comecore" />
+      </entity>
+      <entity id="11" name="app_users" fq-name="iam.app_users" showAttrs="KEYS">
+        <path name="iam" />
+        <path name="comecore" />
+      </entity>
+      <entity id="12" name="organization_memberships" fq-name="iam.organization_memberships" showAttrs="KEYS">
+        <path name="iam" />
+        <path name="comecore" />
+      </entity>
+      <entity id="13" name="organizations" fq-name="iam.organizations" showAttrs="KEYS">
+        <path name="iam" />
+        <path name="comecore" />
+      </entity>
+    </data-source>
+  </entities>
+  <relations>
+    <relation name="customer_events_actor_user_id_fkey" fq-name="audit.customer_events.customer_events_actor_user_id_fkey" type="fk" pk-ref="11" fk-ref="2" />
+    <relation name="customer_events_customer_id_fkey" fq-name="audit.customer_events.customer_events_customer_id_fkey" type="fk" pk-ref="10" fk-ref="2" />
+    <relation name="customer_events_organization_id_fkey" fq-name="audit.customer_events.customer_events_organization_id_fkey" type="fk" pk-ref="13" fk-ref="2" />
+    <relation name="customer_accounts_customer_fk" fq-name="crm.customer_accounts.customer_accounts_customer_fk" type="fk" pk-ref="10" fk-ref="3" />
+    <relation name="customer_addresses_customer_fk" fq-name="crm.customer_addresses.customer_addresses_customer_fk" type="fk" pk-ref="10" fk-ref="4" />
+    <relation name="customer_assignments_customer_fk" fq-name="crm.customer_assignments.customer_assignments_customer_fk" type="fk" pk-ref="10" fk-ref="5" />
+    <relation name="customer_billing_profiles_customer_fk" fq-name="crm.customer_billing_profiles.customer_billing_profiles_customer_fk" type="fk" pk-ref="10" fk-ref="6" />
+    <relation name="customer_contacts_customer_fk" fq-name="crm.customer_contacts.customer_contacts_customer_fk" type="fk" pk-ref="10" fk-ref="7" />
+    <relation name="customer_devices_customer_fk" fq-name="crm.customer_devices.customer_devices_customer_fk" type="fk" pk-ref="10" fk-ref="8" />
+    <relation name="customer_payment_gateways_customer_fk" fq-name="crm.customer_payment_gateways.customer_payment_gateways_customer_fk" type="fk" pk-ref="10" fk-ref="9" />
+    <relation name="customers_created_by_fkey" fq-name="crm.customers.customers_created_by_fkey" type="fk" pk-ref="11" fk-ref="10" />
+    <relation name="customers_organization_id_fkey" fq-name="crm.customers.customers_organization_id_fkey" type="fk" pk-ref="13" fk-ref="10" />
+    <relation name="customers_updated_by_fkey" fq-name="crm.customers.customers_updated_by_fkey" type="fk" pk-ref="11" fk-ref="10" />
+    <relation name="organization_memberships_organization_id_fkey" fq-name="iam.organization_memberships.organization_memberships_organization_id_fkey" type="fk" pk-ref="13" fk-ref="12" />
+    <relation name="organization_memberships_user_id_fkey" fq-name="iam.organization_memberships.organization_memberships_user_id_fkey" type="fk" pk-ref="11" fk-ref="12" />
+  </relations>
+  <notes />
+</diagram>

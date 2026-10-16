@@ -1,14 +1,12 @@
-import { NextResponse } from "next/server";
+import { bridge, safeJson } from "@/lib/auth/bridge";
+import { identityFromHeaders } from "@/lib/auth/config";
 
 export const dynamic = "force-dynamic";
-
-export async function GET() {
-  const backendUrl = process.env.COMECORE_BACKEND_URL ?? "http://127.0.0.1:3000";
+export async function GET(request: Request) {
   try {
-    const response = await fetch(`${backendUrl}/mikrotik/telemetry`, { cache: "no-store", signal: AbortSignal.timeout(12_000) });
-    const body = await response.json();
-    return NextResponse.json(body, { status: response.status });
-  } catch {
-    return NextResponse.json({ message: "El backend de COMECORE no está disponible. Inicia apps/backend para consultar el MikroTik." }, { status: 503 });
-  }
+    const { identity, status } = await identityFromHeaders(request.headers);
+    if (!identity) return safeJson({ message: "Inicia sesión para consultar la red." }, status);
+    if (identity.mfaRequired || identity.passwordChangeRequired || !identity.permissions.includes("red:read")) return safeJson({ message: "No tienes permiso para consultar la red." }, 403);
+    return bridge(request, "/mikrotik/telemetry", "GET");
+  } catch { return safeJson({ message: "El servicio de red no está disponible." }, 503); }
 }

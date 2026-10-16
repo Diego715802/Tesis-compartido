@@ -23,11 +23,13 @@ import type { ServiceStatus } from "../clientes/customer-types";
 import { contractImportMaxBytes, parseContractImport } from "./contract-import-data";
 import type { ContractRow } from "./contract-model";
 
-export type ContractImportDialogProps = { open: boolean; onClose: () => void; rows: ContractRow[]; onApply: (updates: { key: string; status: ServiceStatus }[]) => void | boolean };
+export type ContractImportDialogProps = { open: boolean; onClose: () => void; rows: ContractRow[]; onApply: (updates: { key: string; status: ServiceStatus }[]) => void | boolean | Promise<void | boolean> };
 
 function ContractImportContent({ onClose, rows, onApply }: Omit<ContractImportDialogProps, "open">) {
   const input = useRef<HTMLInputElement | null>(null);
   const readVersion = useRef(0);
+  const [saving, setSaving] = useState(false);
+  const [requestError, setRequestError] = useState("");
   const [fileName, setFileName] = useState("");
   const [content, setContent] = useState<string | null>(null);
   const [format, setFormat] = useState<"csv" | "json">("csv");
@@ -55,15 +57,23 @@ function ContractImportContent({ onClose, rows, onApply }: Omit<ContractImportDi
     const link = document.createElement("a"); link.href = url; link.download = "actualizar-estados-contratos.csv"; link.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 0);
   }
-  function applyImport() {
+  async function applyImport() {
+    if (saving) return;
+    setRequestError("");
     if (content === null || !confirmed) return;
     const verified = parseContractImport(content, format, rows);
     if (verified.errors.length || !verified.updates.length) return;
-    if (onApply(verified.updates) !== false) onClose();
+    setSaving(true);
+    try {
+      if (await onApply(verified.updates) !== false) onClose();
+      else setRequestError("No se guardaron los cambios. Revisa el mensaje del servidor antes de volver a intentarlo.");
+    } catch { setRequestError("No se confirmó el guardado. Revisa los datos y vuelve a intentarlo."); }
+    finally { setSaving(false); }
   }
-  return <Dialog open onClose={onClose} fullWidth maxWidth="md" aria-labelledby="contract-import-title" slotProps={{ paper: { sx: { borderRadius: "2px" } } }}>
-    <DialogTitle component="div" sx={{ display: "flex", alignItems: "center", gap: 1, px: { xs: 2, sm: 3 } }}><Typography id="contract-import-title" component="h2" sx={{ flex: 1, fontSize: 18 }}>{confirmed ? "Confirmar actualización" : "Actualizar contratos desde archivo"}</Typography><Tooltip title="Cerrar"><IconButton size="small" aria-label="Cerrar importación de contratos" onClick={onClose}><CloseRoundedIcon /></IconButton></Tooltip></DialogTitle>
+  return <Dialog open onClose={saving ? undefined : onClose} fullWidth maxWidth="md" aria-labelledby="contract-import-title" slotProps={{ paper: { sx: { borderRadius: "2px" } } }}>
+    <DialogTitle component="div" sx={{ display: "flex", alignItems: "center", gap: 1, px: { xs: 2, sm: 3 } }}><Typography id="contract-import-title" component="h2" sx={{ flex: 1, fontSize: 18 }}>{confirmed ? "Confirmar actualización" : "Actualizar contratos desde archivo"}</Typography><Tooltip title="Cerrar"><IconButton size="small" aria-label="Cerrar importación de contratos" onClick={onClose} disabled={saving}><CloseRoundedIcon /></IconButton></Tooltip></DialogTitle>
     <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
+      {requestError && <Alert severity="error" sx={{ mb: 2 }}>{requestError}</Alert>}
       {!confirmed && <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap", mb: 2 }}><Button variant="outlined" startIcon={<UploadFileOutlinedIcon />} disabled={reading} onClick={() => input.current?.click()}>Seleccionar archivo</Button><Button startIcon={<DownloadRoundedIcon />} onClick={downloadFormat}>Formato CSV</Button><Typography sx={{ color: "text.secondary", fontSize: 13, overflowWrap: "anywhere" }}>{fileName || "CSV o JSON · Máximo 1 MB"}</Typography><input ref={input} hidden type="file" accept=".csv,.json,text/csv,application/json" onChange={(event) => { void readFile(event.target.files?.[0]); event.target.value = ""; }} /></Box>}
       {reading && <Typography role="status" sx={{ py: 2, fontSize: 13 }}>Leyendo archivo...</Typography>}
       {fileError && <Alert severity="error" sx={{ mb: 2 }}>{fileError}</Alert>}
@@ -73,7 +83,7 @@ function ContractImportContent({ onClose, rows, onApply }: Omit<ContractImportDi
       {result && result.preview.length > 100 && <Typography sx={{ mt: 1, color: "text.secondary", fontSize: 13 }}>Mostrando 100 de {result.preview.length} contratos.</Typography>}
       {!result && !reading && !fileError && <Typography sx={{ py: 2, color: "text.secondary", fontSize: 13 }}>Sin archivo seleccionado.</Typography>}
     </DialogContent>
-    <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2, gap: 1 }}><Button color="inherit" onClick={confirmed ? () => setConfirmed(false) : onClose}>{confirmed ? "Volver" : "Cancelar"}</Button><Button variant="contained" disabled={!valid} onClick={confirmed ? applyImport : () => setConfirmed(true)}>{confirmed ? `Actualizar ${result?.updates.length ?? 0}` : "Revisar actualización"}</Button></DialogActions>
+    <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 2, gap: 1 }}><Button color="inherit" disabled={saving} onClick={confirmed ? () => setConfirmed(false) : onClose}>{confirmed ? "Volver" : "Cancelar"}</Button><Button variant="contained" disabled={saving || !valid} onClick={confirmed ? applyImport : () => setConfirmed(true)}>{saving ? "Guardando…" : confirmed ? `Actualizar ${result?.updates.length ?? 0}` : "Revisar actualización"}</Button></DialogActions>
   </Dialog>;
 }
 

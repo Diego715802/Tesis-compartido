@@ -30,7 +30,7 @@ import Typography from "@mui/material/Typography";
 import { useRef, useState } from "react";
 import { ContractFormDialog } from "../contratos/contract-form-dialog";
 import { saveContract } from "../contratos/contract-mutations";
-import { useCustomers } from "./customer-store";
+import { commitCustomers, useCustomers } from "./customer-store";
 import type { Customer, CustomerTicket } from "./customer-types";
 
 const currency = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
@@ -76,33 +76,40 @@ export function ImportCustomersDialog({ onClose, onImport }: { onClose: () => vo
   );
 }
 
-function TicketDialog({ customer, onClose, onSave }: { customer: Customer; onClose: () => void; onSave: (contractId: string, ticket: CustomerTicket) => void }) {
+function TicketDialog({ customer, onClose, onSave }: { customer: Customer; onClose: () => void; onSave: (contractId: string, ticket: CustomerTicket) => void | Promise<void> }) {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("Soporte técnico");
   const [priority, setPriority] = useState<CustomerTicket["priority"]>("Baja");
   const [description, setDescription] = useState("");
   const [contractId, setContractId] = useState(customer.contracts[0]?.id ?? "");
   const [attempted, setAttempted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const titleError = attempted && title.trim().length < 3;
 
-  function saveTicket() {
+  async function saveTicket() {
     if (title.trim().length < 3) {
       setAttempted(true);
       window.setTimeout(() => document.getElementById("ticket-field-title")?.focus(), 0);
       return;
     }
-    onSave(contractId, { id: `TKT-${Date.now()}`, title: title.trim(), category, priority, status: "Abierto", createdAt: new Date().toISOString().slice(0, 10) });
+    if (saving) return;
+    setSaving(true);
+    setSaveError("");
+    try { await onSave(contractId, { id: `TKT-${Date.now()}`, title: title.trim(), category, priority, status: "Abierto", createdAt: new Date().toISOString().slice(0, 10) }); }
+    catch (error) { setSaveError(error instanceof Error ? error.message : "No se pudo guardar el ticket."); }
+    finally { setSaving(false); }
   }
 
-  return <Dialog open onClose={onClose} fullWidth maxWidth="md"><DialogHeader title="Crear ticket" subtitle={`Atención para ${customer.name}`} onClose={onClose} /><DialogContent sx={{ pt: 1.5 }}><Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" }, gap: 1.5 }}><TextField id="ticket-field-title" required label="Título" value={title} error={titleError} helperText={titleError ? "Escribe un título de al menos 3 caracteres." : ""} onChange={(e) => setTitle(e.target.value)} /><TextField select label="Categoría" value={category} onChange={(e) => setCategory(e.target.value)}><MenuItem value="Soporte técnico">Soporte técnico</MenuItem><MenuItem value="Facturación">Facturación</MenuItem><MenuItem value="Instalación">Instalación</MenuItem></TextField><TextField select label="Prioridad" value={priority} onChange={(e) => setPriority(e.target.value as CustomerTicket["priority"])}><MenuItem value="Baja">Baja</MenuItem><MenuItem value="Media">Media</MenuItem><MenuItem value="Alta">Alta</MenuItem></TextField><TextField select label="Contrato" value={contractId} onChange={(event) => setContractId(event.target.value)}>{customer.contracts.map((contract) => <MenuItem key={contract.id} value={contract.id}>{contract.plan} · {contract.id}</MenuItem>)}</TextField><TextField multiline minRows={4} label="Descripción" value={description} onChange={(e) => setDescription(e.target.value)} sx={{ gridColumn: { sm: "1 / -1" } }} /></Box></DialogContent><DialogActions sx={{ px: 3, pb: 2.5 }}><Button color="inherit" onClick={onClose}>Cancelar</Button><Button variant="contained" onClick={saveTicket} disabled={!contractId} sx={{ boxShadow: "none" }}>Crear ticket</Button></DialogActions></Dialog>;
+  return <Dialog open onClose={onClose} fullWidth maxWidth="md"><DialogHeader title="Crear ticket" subtitle={`Atención para ${customer.name}`} onClose={onClose} /><DialogContent sx={{ pt: 1.5 }}>{saveError && <Alert severity="error" sx={{ mb: 2 }}>{saveError}</Alert>}<Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" }, gap: 1.5 }}><TextField id="ticket-field-title" required label="Título" value={title} error={titleError} helperText={titleError ? "Escribe un título de al menos 3 caracteres." : ""} onChange={(e) => setTitle(e.target.value)} /><TextField select label="Categoría" value={category} onChange={(e) => setCategory(e.target.value)}><MenuItem value="Soporte técnico">Soporte técnico</MenuItem><MenuItem value="Facturación">Facturación</MenuItem><MenuItem value="Instalación">Instalación</MenuItem></TextField><TextField select label="Prioridad" value={priority} onChange={(e) => setPriority(e.target.value as CustomerTicket["priority"])}><MenuItem value="Baja">Baja</MenuItem><MenuItem value="Media">Media</MenuItem><MenuItem value="Alta">Alta</MenuItem></TextField><TextField select label="Contrato" value={contractId} onChange={(event) => setContractId(event.target.value)}>{customer.contracts.map((contract) => <MenuItem key={contract.id} value={contract.id}>{contract.plan} · {contract.id}</MenuItem>)}</TextField><TextField multiline minRows={4} label="Descripción" value={description} onChange={(e) => setDescription(e.target.value)} sx={{ gridColumn: { sm: "1 / -1" } }} /></Box></DialogContent><DialogActions sx={{ px: 3, pb: 2.5 }}><Button color="inherit" onClick={onClose}>Cancelar</Button><Button variant="contained" onClick={saveTicket} disabled={!contractId || saving} sx={{ boxShadow: "none" }}>{saving ? "Guardando…" : "Crear ticket"}</Button></DialogActions></Dialog>;
 }
 
 function SectionHeader({ title, action }: { title: string; action?: React.ReactNode }) {
   return <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, mb: 1.25 }}><Typography component="h3" sx={{ fontSize: "0.9rem", fontWeight: 770 }}>{title}</Typography>{action}</Box>;
 }
 
-export function CustomerProfileDialog({ customer, onClose, onEdit, onOpenAccount, onUpdate }: { customer: Customer; onClose: () => void; onEdit: () => void; onOpenAccount: () => void; onUpdate: (customer: Customer) => void }) {
-  const [customers, setCustomers] = useCustomers();
+export function CustomerProfileDialog({ customer, onClose, onEdit, onOpenAccount, onUpdate }: { customer: Customer; onClose: () => void; onEdit: () => void; onOpenAccount: () => void; onUpdate: (customer: Customer) => Promise<void> }) {
+  const [customers] = useCustomers();
   const [contractOpen, setContractOpen] = useState(false);
   const [contractError, setContractError] = useState("");
   const [ticketOpen, setTicketOpen] = useState(false);
@@ -131,9 +138,9 @@ export function CustomerProfileDialog({ customer, onClose, onEdit, onOpenAccount
           </Box>
         </DialogContent>
       </Dialog>
-      {contractOpen && <ContractFormDialog open customers={customers} initialCustomerId={customer.id} saveError={contractError} onClose={() => setContractOpen(false)} onSave={(customerId, contract) => {
+      {contractOpen && <ContractFormDialog open customers={customers} initialCustomerId={customer.id} saveError={contractError} onClose={() => setContractOpen(false)} onSave={async (customerId, contract) => {
         try {
-          setCustomers((current) => saveContract(current, customerId, contract));
+          await commitCustomers((current) => saveContract(current, customerId, contract));
           setContractError("");
           return true;
         } catch (error) {
@@ -141,7 +148,7 @@ export function CustomerProfileDialog({ customer, onClose, onEdit, onOpenAccount
           return false;
         }
       }} />}
-      {ticketOpen && <TicketDialog customer={customer} onClose={() => setTicketOpen(false)} onSave={(contractId, ticket) => { onUpdate({ ...customer, contracts: customer.contracts.map((contract) => contract.id === contractId ? { ...contract, tickets: [...(contract.tickets ?? []), ticket] } : contract) }); setTicketOpen(false); }} />}
+      {ticketOpen && <TicketDialog customer={customer} onClose={() => setTicketOpen(false)} onSave={async (contractId, ticket) => { await onUpdate({ ...customer, contracts: customer.contracts.map((contract) => contract.id === contractId ? { ...contract, tickets: [...(contract.tickets ?? []), ticket] } : contract) }); setTicketOpen(false); }} />}
     </>
   );
 }

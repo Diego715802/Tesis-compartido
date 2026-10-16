@@ -1,14 +1,8 @@
 "use client";
 
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
-import AttachMoneyRoundedIcon from "@mui/icons-material/AttachMoneyRounded";
-import EditNoteRoundedIcon from "@mui/icons-material/EditNoteRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
-import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
 import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
-import PointOfSaleOutlinedIcon from "@mui/icons-material/PointOfSaleOutlined";
-import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Box from "@mui/material/Box";
@@ -18,6 +12,8 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { Brand } from "@/components/brand/brand";
 import { modules } from "@/config/modules";
+import { useIdentity } from "@/components/auth/identity-provider";
+import { permissionForPath } from "@/lib/auth/config";
 import { useEffect, useState } from "react";
 
 export const SIDEBAR_COLLAPSED_WIDTH = 75;
@@ -30,13 +26,7 @@ type SidebarNavigationProps = {
 };
 
 const billingItems = [
-  { hash: "borradores", label: "Borradores", icon: EditNoteRoundedIcon },
-  { hash: "emitidas", label: "Emitidas", icon: ReceiptLongOutlinedIcon },
-  { hash: "notas", label: "Notas de crédito", icon: ArticleOutlinedIcon },
-  { hash: "pagos", label: "Pagos", icon: AttachMoneyRoundedIcon },
-  { hash: "promesas", label: "Promesas de pago", icon: PaidOutlinedIcon },
   { hash: "comprobantes", label: "Comprobantes de Pago", icon: PictureAsPdfOutlinedIcon },
-  { hash: "arqueos", label: "Arqueos de caja", icon: PointOfSaleOutlinedIcon },
 ] as const;
 
 function NavigationContent({
@@ -49,12 +39,13 @@ function NavigationContent({
   onCloseMobile?: () => void;
 }) {
   const pathname = usePathname();
+  const identity = useIdentity();
   const showLabels = mobile || !collapsed;
   const [billingOpen, setBillingOpen] = useState(pathname === "/facturacion" || pathname.startsWith("/facturacion/"));
-  const [billingHash, setBillingHash] = useState("borradores");
+  const [billingHash, setBillingHash] = useState("comprobantes");
 
   useEffect(() => {
-    const syncHash = () => setBillingHash(window.location.hash.replace("#", "") || "borradores");
+    const syncHash = () => setBillingHash(window.location.hash.replace("#", "") || "comprobantes");
     const frame = window.requestAnimationFrame(() => {
       if (pathname === "/facturacion" || pathname.startsWith("/facturacion/")) setBillingOpen(true);
       syncHash();
@@ -90,7 +81,7 @@ function NavigationContent({
         aria-label="Módulos del ERP"
         sx={{ display: "flex", minHeight: 0, flex: 1, flexDirection: "column", overflowY: "auto", overflowX: "hidden", py: mobile ? 1 : 0.75, scrollbarWidth: "none", "&::-webkit-scrollbar": { display: "none" } }}
       >
-        {modules.map((module) => {
+        {modules.filter(module => { const permission = permissionForPath(module.href); return !permission || identity.permissions.includes(permission); }).map((module) => {
           const isActive = pathname === module.href || (module.slug === "facturacion" && pathname.startsWith("/facturacion/"));
           const Icon = module.icon;
 
@@ -136,7 +127,7 @@ function NavigationContent({
                 </Box>
               </Tooltip>
               {module.slug === "facturacion" && (
-                <Box sx={{ display: "grid", gridTemplateRows: billingOpen ? "1fr" : "0fr", transition: "grid-template-rows 240ms cubic-bezier(0.16,1,0.3,1)" }}>
+                <Box inert={!billingOpen} aria-hidden={!billingOpen} sx={{ display: "grid", gridTemplateRows: billingOpen ? "1fr" : "0fr", transition: "grid-template-rows 240ms cubic-bezier(0.16,1,0.3,1)" }}>
                   <Box sx={{ minHeight: 0, overflow: "hidden" }}>
                     {billingItems.map((item) => {
                       const SubIcon = item.icon;

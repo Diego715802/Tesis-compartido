@@ -1,0 +1,197 @@
+.page {
+  --access-ink: #26343f;
+  --access-muted: #57646d;
+  --access-blue: #166b9f;
+  --access-focus: #1c84c6;
+  --access-line: #d2dbe0;
+  display: grid;
+  grid-template-columns: minmax(0, 0.48fr) minmax(0, 0.52fr);
+  min-height: 100svh;
+  color: var(--access-ink);
+  background: #fff;
+}
+
+.skipLink {
+  position: fixed;
+  z-index: 10;
+  top: 12px;
+  left: 12px;
+  padding: 12px 18px;
+  color: #fff;
+  background: var(--access-blue);
+  transform: translateY(-180%);
+  text-decoration: none;
+}
+
+.skipLink:focus { transform: translateY(0); }
+
+.brandPanel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 36px;
+  padding: 42px clamp(32px, 4.8vw, 80px) 34px;
+  color: var(--access-ink);
+  background: #f1f6fa;
+}
+
+.brandHeader { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.wordmark { font-size: 26px; font-weight: 500; letter-spacing: -0.025em; line-height: 1; }
+.wordmark > span { color: var(--access-blue); }
+.productName { font-size: 13px; color: var(--access-muted); }
+.brandContent { width: 100%; max-width: 460px; margin: 0 auto; }
+
+.logo {
+  display: block;
+  width: min(100%, 290px);
+  height: auto;
+  margin: 0 auto 32px;
+  object-fit: contain;
+}
+
+.brandCopy h2 { margin: 0; font-size: clamp(32px, 3.1vw, 48px); font-weight: 400; line-height: 1.14; letter-spacing: -0.025em; text-wrap: balance; }
+.brandCopy p { margin: 22px 0 0; font-size: 16px; line-height: 1.6; color: var(--access-muted); }
+.brandFooter { display: flex; align-items: center; justify-content: space-between; gap: 24px; font-size: 13px; color: var(--access-muted); }
+.brandLine { width: 64px; height: 1px; background: #23c6c8; }
+
+.accessPanel { display: flex; flex-direction: column; justify-content: space-between; gap: 48px; padding: 38px clamp(32px, 5vw, 88px) 30px; }
+.accessHeader { display: flex; justify-content: flex-end; }
+.erpLink { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; font-size: 13px; color: var(--access-muted); text-decoration: none; text-underline-offset: 4px; }
+.erpLink svg { width: 17px; height: 17px; }
+.erpLink:hover { color: var(--access-blue); text-decoration: underline; }
+.accessContent { width: 100%; max-width: 400px; margin: auto; }
+.accessContent h1 { margin: 0; max-width: 360px; font-size: 36px; font-weight: 500; letter-spacing: -0.03em; line-height: 1.16; text-wrap: balance; }
+.intro { margin: 16px 0 32px; font-size: 15px; line-height: 1.65; color: var(--access-muted); }
+.form { display: flex; flex-direction: column; gap: 22px; }
+.field { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.field label { font-size: 14px; font-weight: 500; line-height: 1.4; }
+
+.field input {
+  display: block;
+  width: 100%;
+  height: 52px;
+  min-width: 0;
+  padding: 0 15px;
+  border: 1px solid var(--access-line);
+  border-radius: 2px;
+  color: var(--access-ink);
+  background: #fff;
+  font: inherit;
+  font-size: 16px;
+  line-height: normal;
+  caret-color: var(--access-blue);
+  transition: border-color 160ms ease-out;
+}
+
+.field input::placeholder { color: #65737d; opacity: 1; }
+.field input:hover { border-color: #8199aa; }
+.field input:focus { border-color: var(--access-focus); outline: 2px solid var(--access-focus); outline-offset: 2px; }
+.field input[aria-invalid="true"] { border-color: #a33c3c; }
+.passwordField { position: relative; }
+.passwordField input { padding-right: 56px; }
+
+.visibilityButton {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  color: var(--access-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.visibilityButton svg { width: 22px; height: 22px; }
+.visibilityButton:hover { color: var(--access-blue); background: #eaf5fb; }
+.fieldError { margin: 0; font-size: 13px; line-height: 1.5; color: #a33c3c; }
+.recoveryButton { align-self: flex-end; min-height: 44px; margin-top: -16px; padding: 0; border: 0; color: var(--access-blue); background: transparent; font: inherit; font-size: 13px; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.recoveryButton:hover { color: #104d73; }
+
+.submitButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-height: 52px;
+  margin-top: -8px;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 2px;
+  color: #fff;
+  background: var(--access-blue);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 160ms ease-out;
+}
+
+.submitButton:hover { background: #104d73; }
+.submitButton:active { background: #0b3a58; }
+.submitButton svg { width: 21px; height: 21px; }
+.feedback { padding: 14px 16px; border: 1px solid #c4dbe8; border-radius: 2px; font-size: 13px; line-height: 1.6; color: #284b61; background: #f0f7fb; }
+.emptyFeedback { position: absolute; width: 1px; height: 1px; overflow: hidden; }
+.previewNote { display: flex; align-items: flex-start; gap: 10px; margin-top: 28px; padding-top: 22px; border-top: 1px solid #e7eaec; color: var(--access-muted); }
+.previewNote > svg { flex: 0 0 18px; width: 18px; height: 18px; margin-top: 1px; }
+.previewNote p { margin: 0; font-size: 12px; line-height: 1.6; }
+.previewNote .previewTitle { margin-bottom: 4px; color: var(--access-ink); font-size: 13px; font-weight: 500; }
+.accessFooter { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; color: var(--access-muted); font-size: 12px; }
+.page :is(a, button):focus-visible { outline: 2px solid var(--access-focus); outline-offset: 4px; }
+.page ::selection { color: #fff; background: var(--access-blue); }
+
+@media (min-width: 768px) and (max-height: 780px) {
+  .brandPanel { gap: 24px; padding-top: 28px; padding-bottom: 24px; }
+  .logo { width: 230px; margin-bottom: 20px; }
+  .brandCopy h2 { font-size: clamp(30px, 3.1vw, 42px); }
+  .brandCopy p { margin-top: 18px; }
+  .accessPanel { gap: 24px; padding-top: 22px; padding-bottom: 22px; }
+  .accessContent h1 { font-size: 34px; }
+  .intro { margin-bottom: 24px; }
+  .form { gap: 18px; }
+  .previewNote { margin-top: 24px; padding-top: 18px; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .page { grid-template-columns: minmax(0, 0.44fr) minmax(0, 0.56fr); }
+  .brandPanel { padding-left: 28px; padding-right: 28px; }
+  .brandHeader { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .logo { width: 230px; }
+  .brandCopy h2 { font-size: 32px; }
+  .brandCopy p { font-size: 15px; }
+  .accessPanel { padding-left: 32px; padding-right: 32px; }
+  .accessContent h1 { font-size: 32px; }
+}
+
+@media (max-width: 767px) {
+  .page { display: flex; flex-direction: column; }
+  .brandPanel { gap: 0; padding: 20px 24px; }
+  .brandHeader { gap: 12px; }
+  .wordmark { font-size: 24px; }
+  .productName { font-size: 12px; }
+  .brandContent { display: flex; align-items: center; gap: 18px; max-width: none; margin-top: 16px; }
+  .logo { flex: 0 0 64px; width: 64px; margin: 0; }
+  .brandCopy h2 { font-size: 22px; line-height: 1.25; }
+  .brandCopy h2 br { display: none; }
+  .brandCopy p, .brandFooter { display: none; }
+  .accessPanel { flex: 1; gap: 30px; padding: 14px 24px 24px; }
+  .accessContent { margin: 0 auto; }
+  .accessContent h1 { max-width: 300px; font-size: 30px; }
+  .intro { margin-top: 12px; margin-bottom: 28px; font-size: 14px; }
+  .form { gap: 20px; }
+  .accessHeader, .accessFooter { width: 100%; max-width: 400px; margin: 0 auto; }
+  .previewNote { margin-top: 26px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page * { transition: none; }
+}
+.submitButton:disabled, .secondaryButton:disabled, .recoveryButton:disabled { cursor: wait; opacity: 0.65; }
+.secondaryButton { min-height: 44px; padding: 10px 14px; border: 1px solid var(--access-line); border-radius: 2px; background: #fff; color: var(--access-blue); font: inherit; font-size: 14px; cursor: pointer; }
+.secondaryButton:hover { background: #f1f6fa; }
+.hint { margin: 0; color: var(--access-muted); font-size: 13px; line-height: 1.5; }

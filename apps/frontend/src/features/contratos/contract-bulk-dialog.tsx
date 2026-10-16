@@ -22,11 +22,13 @@ import { contractFormOptions } from "./contract-form-data";
 import { statuses, type ContractRow } from "./contract-model";
 
 export type ContractBulkChanges = Partial<Pick<CustomerContract, "status" | "plan" | "server" | "node" | "interfaceName">>;
-export type ContractBulkDialogProps = { open: boolean; onClose: () => void; rows: ContractRow[]; onApply: (changes: ContractBulkChanges) => void | boolean; customers: Customer[] };
+export type ContractBulkDialogProps = { open: boolean; onClose: () => void; rows: ContractRow[]; onApply: (changes: ContractBulkChanges) => void | boolean | Promise<void | boolean>; customers: Customer[] };
 type BulkField = keyof ContractBulkChanges;
 const fields: { name: BulkField; label: string }[] = [{ name: "status", label: "Estado" }, { name: "plan", label: "Plan" }, { name: "server", label: "Servidor" }, { name: "node", label: "Nodo" }, { name: "interfaceName", label: "Interfaz" }];
 
 function ContractBulkContent({ onClose, rows, onApply, customers }: Omit<ContractBulkDialogProps, "open">) {
+  const [saving, setSaving] = useState(false);
+  const [requestError, setRequestError] = useState("");
   const [enabled, setEnabled] = useState<Partial<Record<BulkField, boolean>>>({});
   const [values, setValues] = useState<Record<BulkField, string>>({ status: "Habilitado", plan: "", server: "", node: "", interfaceName: "" });
   const [review, setReview] = useState(false);
@@ -49,14 +51,22 @@ function ContractBulkContent({ onClose, rows, onApply, customers }: Omit<Contrac
     setValues((current) => ({ ...current, [name]: value, ...(name === "server" ? { node: "", interfaceName: "" } : {}) }));
     if (name === "server") setEnabled((current) => ({ ...current, node: true, interfaceName: true }));
   }
-  function applyChanges() {
+  async function applyChanges() {
+    if (saving) return;
+    setRequestError("");
     if (rows.length === 0 || active.length === 0 || Object.keys(errors).length) return;
     const changes = Object.fromEntries(active.map((field) => [field.name, values[field.name].trim()])) as ContractBulkChanges;
-    if (onApply(changes) !== false) onClose();
+    setSaving(true);
+    try {
+      if (await onApply(changes) !== false) onClose();
+      else setRequestError("No se guardaron los cambios. Revisa el mensaje del servidor antes de volver a intentarlo.");
+    } catch { setRequestError("No se confirmó el guardado. Revisa los datos y vuelve a intentarlo."); }
+    finally { setSaving(false); }
   }
-  return <Dialog open onClose={onClose} fullWidth maxWidth="sm" aria-labelledby="contract-bulk-title" slotProps={{ paper: { sx: { borderRadius: "2px" } } }}>
-    <DialogTitle component="div" sx={{ display: "flex", alignItems: "center", gap: 1, px: 3 }}><Typography id="contract-bulk-title" component="h2" sx={{ flex: 1, fontSize: 18 }}>{review ? "Confirmar modificación" : "Modificar contratos en lote"}</Typography><Tooltip title="Cerrar"><IconButton size="small" aria-label="Cerrar modificación en lote" onClick={onClose}><CloseRoundedIcon /></IconButton></Tooltip></DialogTitle>
+  return <Dialog open onClose={saving ? undefined : onClose} fullWidth maxWidth="sm" aria-labelledby="contract-bulk-title" slotProps={{ paper: { sx: { borderRadius: "2px" } } }}>
+    <DialogTitle component="div" sx={{ display: "flex", alignItems: "center", gap: 1, px: 3 }}><Typography id="contract-bulk-title" component="h2" sx={{ flex: 1, fontSize: 18 }}>{review ? "Confirmar modificación" : "Modificar contratos en lote"}</Typography><Tooltip title="Cerrar"><IconButton size="small" aria-label="Cerrar modificación en lote" onClick={onClose} disabled={saving}><CloseRoundedIcon /></IconButton></Tooltip></DialogTitle>
     <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
+      {requestError && <Alert severity="error" sx={{ mb: 2 }}>{requestError}</Alert>}
       <Typography sx={{ mb: 2, fontSize: 13 }}>{rows.length} contrato{rows.length === 1 ? " seleccionado" : "s seleccionados"}.</Typography>
       {rows.length === 0 && <Alert severity="info">Selecciona contratos para realizar una modificación en lote.</Alert>}
       {review ? <><Alert severity="warning" sx={{ mb: 2 }}>Se aplicarán estos cambios a {rows.length} contrato{rows.length === 1 ? "" : "s"}.</Alert><Box component="dl" sx={{ m: 0 }}>{active.map((field) => <Box key={field.name} sx={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 2fr)", gap: 2, py: 1.25, borderBottom: "1px solid", borderColor: "divider" }}><Typography component="dt" sx={{ fontSize: 13 }}>{field.label}</Typography><Typography component="dd" sx={{ m: 0, fontSize: 13, fontWeight: 600, overflowWrap: "anywhere" }}>{values[field.name]}</Typography></Box>)}</Box></> : <Box sx={{ display: "grid", gap: 1.5 }}>{fields.map((field) => {
@@ -67,7 +77,7 @@ function ContractBulkContent({ onClose, rows, onApply, customers }: Omit<Contrac
         </Box>;
       })}</Box>}
     </DialogContent>
-    <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: 2, gap: 1 }}><Button color="inherit" onClick={review ? () => setReview(false) : onClose}>{review ? "Volver" : "Cancelar"}</Button><Button variant="contained" disabled={rows.length === 0 || active.length === 0} onClick={review ? applyChanges : () => { setAttempted(true); if (!Object.keys(errors).length) setReview(true); }}>{review ? `Aplicar a ${rows.length}` : "Revisar cambios"}</Button></DialogActions>
+    <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: 2, gap: 1 }}><Button color="inherit" disabled={saving} onClick={review ? () => setReview(false) : onClose}>{review ? "Volver" : "Cancelar"}</Button><Button variant="contained" disabled={saving || rows.length === 0 || active.length === 0} onClick={review ? applyChanges : () => { setAttempted(true); if (!Object.keys(errors).length) setReview(true); }}>{saving ? "Guardando…" : review ? `Aplicar a ${rows.length}` : "Revisar cambios"}</Button></DialogActions>
   </Dialog>;
 }
 

@@ -1,0 +1,135 @@
+{
+  "date": "2026-10-14",
+  "environment": "local, America/Mexico_City",
+  "public_deployment": false,
+  "catalog": {
+    "tables": 67,
+    "foreign_keys": 217,
+    "forced_rls_tables": 66,
+    "schemas": 15,
+    "applied_migrations": 10
+  },
+  "static_review": {
+    "files": 71,
+    "event_controls": 667,
+    "fields": 248,
+    "all_controls_clicked": false
+  },
+  "checks": [
+    {
+      "command": "npm run build --workspaces --if-present",
+      "result": "passed; frontend rebuilt after navigation fix"
+    },
+    {
+      "command": "npm test --workspace apps/backend",
+      "result": "passed",
+      "files": 8,
+      "tests": 67
+    },
+    {
+      "command": "node scripts/test-auth-security.mjs",
+      "result": "passed",
+      "controls": 33,
+      "external_smtp_tested": false
+    },
+    {
+      "command": "node scripts/test-http-boundaries.mjs",
+      "result": "passed",
+      "checks": 18,
+      "public_https_tested": false
+    },
+    {
+      "command": "node scripts/test-erp-database.cjs",
+      "result": "passed; 007 + 008 fixture checks include 009-011; rollback"
+    },
+    {
+      "command": "psql -f database/checks/003_local_rls_checks.sql",
+      "result": "passed; rollback"
+    },
+    {
+      "command": "node scripts/test-network-boundary.mjs",
+      "result": "passed; 200 owner organization and 403 foreign organization before service call; fixture removed"
+    },
+    {
+      "command": "node scripts/test-contracts.cjs",
+      "result": "passed",
+      "assertions": 245
+    },
+    {
+      "command": "node --experimental-strip-types --test apps/frontend/tests/customer-date.test.mjs",
+      "result": "passed",
+      "tests": 2
+    },
+    {
+      "command": "node apps/frontend/tests/auth-boundary.test.cjs",
+      "result": "passed; real BFF source with mocked upstream"
+    },
+    {
+      "command": "node apps/frontend/tests/cmc-boundary.test.cjs",
+      "result": "passed",
+      "scenarios": 10,
+      "mocked_upstream": true
+    },
+    {
+      "command": "npm run lint --workspace apps/frontend",
+      "result": "0 errors; 5 warnings in imported billing source"
+    },
+    {
+      "command": "npm run lint --workspace apps/backend",
+      "result": "0 errors; 3 warnings"
+    },
+    {
+      "command": "node scripts/backup-local-database.cjs --verify",
+      "result": "passed",
+      "manifest": {
+        "database": "comecore",
+        "created_at": "2026-10-14T19:21:31.006Z",
+        "sha256": "003abb63a5026ba77098356f86d25fd5d45c96a7c8da1810cbe325186097cced",
+        "restoration_verified": true,
+        "verified_scope": "Todas las tablas de aplicación, recuentos, RLS, restricciones e historial"
+      }
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    }
+  ],
+  "audit": {
+    "dependency-audit": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 5,
+      "critical": 0,
+      "total": 5
+    },
+    "production-dependency-audit": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    }
+  },
+  "visual": {
+    "browser_diagram": "verified 1:1, 1:N, intermediate N:M, search, domain and scale",
+    "native_dbeaver": "XML validated, 12 new diagrams copied and CLI opening accepted; native rendering not visually verified",
+    "screenshot": "docs/database-model/diagram.png",
+    "browser_review": "docs/database-model/browser-review.json"
+  },
+  "cleanup": {
+    "analysis_and_network_fixture_accounts": 0,
+    "temporary_restore_databases": 0
+  },
+  "pending": [
+    "Normalized APIs and snapshot migration",
+    "Production HTTPS, private PostgreSQL TLS and trusted ingress",
+    "SMTP delivery and administrative MFA recovery operations",
+    "Private file storage and scanning",
+    "Router and payment/fiscal provider configuration",
+    "Off-device encrypted backups and disaster recovery",
+    "Development dependency security advisories",
+    "Public-environment security and load acceptance"
+  ]
+}

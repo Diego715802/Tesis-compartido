@@ -12,7 +12,14 @@
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspace=@erp/backend",
-    "test:database": "node scripts/test-customer-database.cjs"
+    "test:database": "node scripts/test-customer-database.cjs",
+    "test:erp-database": "node scripts/test-erp-database.cjs",
+    "test:security": "node scripts/test-auth-security.mjs",
+    "test:network-boundary": "node scripts/test-network-boundary.mjs",
+    "test:http-boundaries": "node scripts/test-http-boundaries.mjs",
+    "db:model": "node scripts/generate-database-model.cjs",
+    "db:model:obsidian": "node scripts/document-database-model.cjs",
+    "db:diagram": "node scripts/serve-database-model.cjs"
   },
   "allowScripts": {
     "fsevents@2.3.3": true,

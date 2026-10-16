@@ -1,3 +1,4 @@
+import { requireIdentity } from "@/lib/auth/server";
 import type { Metadata } from "next";
 import { NodosModule } from "@/features/nodos/nodos-module";
 
@@ -6,6 +7,7 @@ export const metadata: Metadata = {
   description: "Módulo Nodos de ComeCore ERP.",
 };
 
-export default function NodosPage() {
+export default async function NodosPage() {
+  await requireIdentity("red:read");
   return <NodosModule />;
 }

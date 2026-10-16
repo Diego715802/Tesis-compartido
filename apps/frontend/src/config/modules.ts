@@ -7,6 +7,7 @@ import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
 import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
+import WebOutlinedIcon from "@mui/icons-material/WebOutlined";
 
 export type ModuleSlug =
   | "dashboard"
@@ -16,7 +17,8 @@ export type ModuleSlug =
   | "facturacion"
   | "inventario"
   | "servidores"
-  | "nodos";
+  | "nodos"
+  | "sitio-web";
 
 export type ModuleDefinition = {
   slug: ModuleSlug;
@@ -73,6 +75,12 @@ export const modules: readonly ModuleDefinition[] = [
     label: "Nodos",
     href: "/nodos",
     icon: HubOutlinedIcon,
+  },
+  {
+    slug: "sitio-web",
+    label: "Sitio web y contenido (CMC)",
+    href: "/sitio-web",
+    icon: WebOutlinedIcon,
   },
 ] as const;
 

@@ -5,9 +5,9 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
 import { appTheme } from "@/theme/theme";
 
-export function AppThemeProvider({ children }: { children: React.ReactNode }) {
+export function AppThemeProvider({ children, nonce }: { children: React.ReactNode; nonce?: string }) {
   return (
-    <AppRouterCacheProvider options={{ enableCssLayer: true }}>
+    <AppRouterCacheProvider options={{ enableCssLayer: true, nonce }}>
       <ThemeProvider theme={appTheme}>
         <CssBaseline enableColorScheme />
         {children}

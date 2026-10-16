@@ -28,7 +28,7 @@ import { GoogleMap } from "@/components/maps/google-map";
 import { CUSTOMER_ID_PREFIX, customerIdSuffix, normalizeCustomerId } from "./customer-id";
 import type { Customer, CustomerKind } from "./customer-types";
 
-type CustomerFormDialogProps = { customer?: Customer | null; onClose: () => void; onSave: (customer: Customer) => void };
+type CustomerFormDialogProps = { customer?: Customer | null; onClose: () => void; onSave: (customer: Customer) => void | Promise<void>; saving?: boolean };
 type FormTab = "basico" | "facturacion" | "pasarela";
 
 const inputSx = {
@@ -66,7 +66,7 @@ function splitName(value: string) {
   return { firstName: parts[0] ?? "", secondName: parts.length > 3 ? parts[1] : "", firstLastName: parts.length > 1 ? parts[parts.length - 2] : "", secondLastName: parts.length > 2 ? parts[parts.length - 1] : "" };
 }
 
-export function CustomerFormDialog({ customer, onClose, onSave }: CustomerFormDialogProps) {
+export function CustomerFormDialog({ customer, onClose, onSave, saving = false }: CustomerFormDialogProps) {
   const theme = useTheme();
   const mobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [tab, setTab] = useState<FormTab>("basico");
@@ -82,6 +82,7 @@ export function CustomerFormDialog({ customer, onClose, onSave }: CustomerFormDi
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving) return;
     const errors: Record<string, string> = {};
     if (composedName.trim().length < 3) errors.name = "Ingresa el nombre o razón social del cliente.";
     if (draft.document.trim().length < 3) errors.document = "Ingresa el documento o cédula.";
@@ -107,11 +108,11 @@ export function CustomerFormDialog({ customer, onClose, onSave }: CustomerFormDi
   const latLngAdornment = <InputAdornment position="end"><RefreshRoundedIcon sx={{ color: "primary.main", fontSize: 18 }} /></InputAdornment>;
 
   return (
-    <Dialog open onClose={onClose} fullScreen={mobile} maxWidth={false} slotProps={{ paper: { sx: { width: mobile ? "100%" : "min(1780px, calc(100vw - 40px))", maxWidth: "none", maxHeight: mobile ? "100dvh" : "calc(100dvh - 32px)", borderRadius: 0 } }, backdrop: { sx: { backgroundColor: "rgba(20,31,43,.62)" } } }}>
-      <Box component="form" noValidate onSubmit={submit} sx={{ display: "flex", minHeight: 0, flex: 1, flexDirection: "column" }}>
+    <Dialog open onClose={saving ? undefined : onClose} fullScreen={mobile} maxWidth={false} slotProps={{ paper: { sx: { width: mobile ? "100%" : "min(1780px, calc(100vw - 40px))", maxWidth: "none", maxHeight: mobile ? "100dvh" : "calc(100dvh - 32px)", borderRadius: 0 } }, backdrop: { sx: { backgroundColor: "rgba(20,31,43,.62)" } } }}>
+      <Box component="form" noValidate onSubmit={submit} aria-busy={saving} sx={{ display: "flex", minHeight: 0, flex: 1, flexDirection: "column" }}>
         <DialogTitle component="div" sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, py: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
           <Typography component="h2" sx={{ fontSize: "1.05rem", fontWeight: 760 }}>{editing ? "Editar cliente" : "Nuevo cliente"}</Typography>
-          <IconButton aria-label="Cerrar formulario" onClick={onClose}><CloseRoundedIcon /></IconButton>
+          <IconButton aria-label="Cerrar formulario" onClick={onClose} disabled={saving}><CloseRoundedIcon /></IconButton>
         </DialogTitle>
 
         <Tabs value={tab} onChange={(_, value: FormTab) => setTab(value)} variant="scrollable" scrollButtons="auto" sx={{ px: { xs: 0.5, sm: 2 }, minHeight: 58, borderBottom: "1px solid", borderColor: "divider", "& .MuiTab-root": { minHeight: 58, px: { xs: 1.5, sm: 2.5 }, fontSize: "0.76rem", fontWeight: 700 } }}>
@@ -244,8 +245,8 @@ export function CustomerFormDialog({ customer, onClose, onSave }: CustomerFormDi
         </DialogContent>
 
         <DialogActions sx={{ px: { xs: 1.5, sm: 2.5 }, py: 1.5, borderTop: "1px solid", borderColor: "divider" }}>
-          <Button onClick={onClose} color="inherit">Cancelar</Button>
-          <Button type="submit" variant="contained" sx={{ boxShadow: "none" }}>{editing ? "Actualizar" : "Crear"}</Button>
+          <Button onClick={onClose} color="inherit" disabled={saving}>Cancelar</Button>
+          <Button type="submit" variant="contained" disabled={saving} sx={{ boxShadow: "none" }}>{saving ? "Guardando…" : editing ? "Actualizar" : "Crear"}</Button>
         </DialogActions>
       </Box>
     </Dialog>

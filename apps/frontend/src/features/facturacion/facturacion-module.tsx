@@ -2,24 +2,30 @@
 
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AutorenewRoundedIcon from "@mui/icons-material/AutorenewRounded";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import FilterAltOutlinedIcon from "@mui/icons-material/FilterAltOutlined";
 import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
+import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
 import PointOfSaleOutlinedIcon from "@mui/icons-material/PointOfSaleOutlined";
 import PrintOutlinedIcon from "@mui/icons-material/PrintOutlined";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import Box from "@mui/material/Box";
 import Breadcrumbs from "@mui/material/Breadcrumbs";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
+import Collapse from "@mui/material/Collapse";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -77,9 +83,13 @@ const panelSx = {
 type PreviewState = {
   title: string;
   subtitle?: string;
-  kind?: "document" | "audit";
+  kind?: "document" | "audit" | "receipt";
   lines?: { label: string; value: string }[];
+  receipt?: ReceiptRecord;
 } | null;
+
+type ReceiptSearchCriterion = "client" | "invoice";
+type ReceiptFilterField = "" | "viewed" | "status" | "source";
 
 function matchesQuery(record: object, query: string) {
   return Object.values(record)
@@ -1859,48 +1869,274 @@ function PaymentReceiptsView({
   setQuery: (value: string) => void;
   onPreview: (record: ReceiptRecord) => void;
 }) {
-  const filtered = paymentReceipts.filter((row) => matchesQuery(row, query));
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [searchCriterion, setSearchCriterion] =
+    useState<ReceiptSearchCriterion>("client");
+  const [criteriaAnchor, setCriteriaAnchor] = useState<HTMLElement | null>(null);
+  const [filterField, setFilterField] = useState<ReceiptFilterField>("");
+  const [filterValue, setFilterValue] = useState("");
+
+  const filterValues: Record<Exclude<ReceiptFilterField, "">, string[]> = {
+    viewed: ["Visto", "No visto"],
+    status: ["Procesado", "Pendiente"],
+    source: ["Carga manual", "Portal del cliente"],
+  };
+  const availableFilterValues = filterField ? filterValues[filterField] : [];
+  const normalizedQuery = query.trim().toLocaleLowerCase("es-MX");
+  const filtered = paymentReceipts.filter((row) => {
+    const searchTarget =
+      searchCriterion === "client"
+        ? row.client
+        : `${row.invoiceNumber} ${row.id}`;
+    const matchesSearch = searchTarget
+      .toLocaleLowerCase("es-MX")
+      .includes(normalizedQuery);
+    const matchesFilter =
+      !filterField ||
+      !filterValue ||
+      (filterField === "viewed"
+        ? (row.viewed ? "Visto" : "No visto") === filterValue
+        : String(row[filterField]) === filterValue);
+    return matchesSearch && matchesFilter;
+  });
+
+  function resetReceiptFilters() {
+    setQuery("");
+    setFilterField("");
+    setFilterValue("");
+  }
+
   return (
     <>
       <Box
         sx={{
           ...panelSx,
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
           mb: 1.5,
-          p: 1.2,
-          flexWrap: "wrap",
+          overflow: "hidden",
         }}
       >
-        <TextField
-          size="small"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Nombre de cliente, número de factura..."
-          sx={{ flex: "1 1 320px", maxWidth: 560 }}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchRoundedIcon sx={{ fontSize: 18 }} />
-                </InputAdornment>
-              ),
-            },
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            p: 1.2,
+            flexWrap: "wrap",
           }}
-        />
-        <Chip
-          label={`${filtered.length} Total items`}
-          variant="outlined"
-          sx={{ height: 38, borderRadius: "6px" }}
-        />
-        <Button
-          variant="outlined"
-          startIcon={<AutorenewRoundedIcon />}
-          onClick={() => setQuery("")}
         >
-          Explora lo nuevo
-        </Button>
+          <Tooltip title={filtersOpen ? "Ocultar filtros" : "Mostrar filtros"}>
+            <IconButton
+              aria-label={filtersOpen ? "Ocultar filtros" : "Mostrar filtros"}
+              aria-expanded={filtersOpen}
+              onClick={() => setFiltersOpen((open) => !open)}
+              sx={{
+                width: 38,
+                height: 38,
+                color: filtersOpen ? "#FFFFFF" : "#676A6C",
+                backgroundColor: filtersOpen ? "#1C84C6" : "#F5F5F5",
+                "&:hover": {
+                  color: filtersOpen ? "#FFFFFF" : "#1C84C6",
+                  backgroundColor: filtersOpen ? "#166B9F" : "#E5E8EA",
+                },
+              }}
+            >
+              <FilterAltOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <TextField
+            size="small"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={
+              searchCriterion === "client"
+                ? "Nombre del cliente"
+                : "Número de factura"
+            }
+            sx={{ flex: "1 1 320px", maxWidth: 620 }}
+            slotProps={{
+              htmlInput: {
+                "aria-label":
+                  searchCriterion === "client"
+                    ? "Buscar por nombre del cliente"
+                    : "Buscar por número de factura",
+              },
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start" sx={{ mr: 0.5 }}>
+                    <Tooltip title="Cambiar criterio de búsqueda">
+                      <IconButton
+                        size="small"
+                        aria-label="Cambiar criterio de búsqueda"
+                        aria-haspopup="menu"
+                        aria-expanded={Boolean(criteriaAnchor)}
+                        onClick={(event) => setCriteriaAnchor(event.currentTarget)}
+                        sx={{ mr: 0.5, backgroundColor: "#F5F5F5" }}
+                      >
+                        {searchCriterion === "client" ? (
+                          <PersonOutlineRoundedIcon sx={{ fontSize: 17 }} />
+                        ) : (
+                          <DescriptionOutlinedIcon sx={{ fontSize: 17 }} />
+                        )}
+                      </IconButton>
+                    </Tooltip>
+                    <SearchRoundedIcon sx={{ color: "#8A8C8E", fontSize: 18 }} />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Tooltip title="La búsqueda usa el criterio seleccionado">
+                      <InfoOutlinedIcon sx={{ color: "#1C84C6", fontSize: 16 }} />
+                    </Tooltip>
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+          <Chip
+            label={`${filtered.length} ${filtered.length === 1 ? "Total item" : "Total items"}`}
+            variant="outlined"
+            sx={{ height: 38, borderRadius: "2px" }}
+          />
+          <Button
+            variant="outlined"
+            startIcon={<AutorenewRoundedIcon />}
+            onClick={resetReceiptFilters}
+          >
+            Explora lo nuevo
+          </Button>
+        </Box>
+
+        <Menu
+          anchorEl={criteriaAnchor}
+          open={Boolean(criteriaAnchor)}
+          onClose={() => setCriteriaAnchor(null)}
+          slotProps={{ paper: { sx: { width: 280, mt: 0.75 } } }}
+        >
+          <Box sx={{ px: 2, pt: 0.75, pb: 1 }}>
+            <Typography sx={{ color: "#676A6C", fontSize: 12, fontWeight: 700 }}>
+              Criterios de búsqueda
+            </Typography>
+          </Box>
+          {([
+            {
+              value: "client" as const,
+              label: "Nombre del cliente",
+              hint: "Busca coincidencias por nombre",
+              icon: PersonOutlineRoundedIcon,
+            },
+            {
+              value: "invoice" as const,
+              label: "Número de factura",
+              hint: "Busca por factura o comprobante",
+              icon: DescriptionOutlinedIcon,
+            },
+          ]).map((item) => {
+            const CriterionIcon = item.icon;
+            const selected = searchCriterion === item.value;
+            return (
+              <MenuItem
+                key={item.value}
+                selected={selected}
+                onClick={() => {
+                  setSearchCriterion(item.value);
+                  setQuery("");
+                  setCriteriaAnchor(null);
+                }}
+                sx={{ gap: 1.2, py: 1 }}
+              >
+                <CriterionIcon sx={{ color: "#676A6C", fontSize: 20 }} />
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography sx={{ fontSize: 12.5, fontWeight: 650 }}>
+                    {item.label}
+                  </Typography>
+                  <Typography sx={{ color: "#8A8C8E", fontSize: 10.5 }}>
+                    {item.hint}
+                  </Typography>
+                </Box>
+                {selected && (
+                  <CheckCircleRoundedIcon sx={{ color: "#1AB394", fontSize: 17 }} />
+                )}
+              </MenuItem>
+            );
+          })}
+        </Menu>
+
+        <Collapse in={filtersOpen} unmountOnExit>
+          <Box
+            sx={{
+              px: { xs: 1.5, sm: 2 },
+              py: 1.5,
+              backgroundColor: "#FAFAFA",
+              borderTop: "1px solid #E7EAEC",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1.5 }}>
+              <Typography sx={{ color: "#676A6C", fontSize: 12, fontWeight: 700 }}>
+                ¿Cómo usar los filtros?
+              </Typography>
+              <Tooltip title="Selecciona un identificador y después el valor que deseas mostrar.">
+                <InfoOutlinedIcon sx={{ color: "#1C84C6", fontSize: 16 }} />
+              </Tooltip>
+            </Box>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", sm: "70px minmax(210px, 280px) minmax(180px, 240px) auto" },
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              <Typography sx={{ color: "#676A6C", fontSize: 12 }}>Dónde</Typography>
+              <TextField
+                select
+                size="small"
+                value={filterField}
+                onChange={(event) => {
+                  setFilterField(event.target.value as ReceiptFilterField);
+                  setFilterValue("");
+                }}
+                aria-label="Seleccionar identificador del filtro"
+                slotProps={{ select: { displayEmpty: true } }}
+              >
+                <MenuItem value="" disabled>
+                  Selecciona un identificador
+                </MenuItem>
+                <MenuItem value="viewed">Visto</MenuItem>
+                <MenuItem value="status">Estado</MenuItem>
+                <MenuItem value="source">Canal de origen</MenuItem>
+              </TextField>
+              <TextField
+                select
+                size="small"
+                value={filterValue}
+                onChange={(event) => setFilterValue(event.target.value)}
+                disabled={!filterField}
+                aria-label="Seleccionar valor del filtro"
+                slotProps={{ select: { displayEmpty: true } }}
+              >
+                <MenuItem value="" disabled>
+                  Selecciona un valor
+                </MenuItem>
+                {availableFilterValues.map((value) => (
+                  <MenuItem key={value} value={value}>
+                    {value}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <Button
+                color="inherit"
+                onClick={() => {
+                  setFilterField("");
+                  setFilterValue("");
+                }}
+                disabled={!filterField && !filterValue}
+                sx={{ justifySelf: { sm: "start" } }}
+              >
+                Limpiar filtro
+              </Button>
+            </Box>
+          </Box>
+        </Collapse>
       </Box>
       <Box sx={panelSx}>
         <TableContainer>
@@ -3373,6 +3609,213 @@ function CreateInvoiceDialog({
   );
 }
 
+function ReceiptMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <Box>
+      <Typography sx={{ color: "#676A6C", fontSize: 11.5, fontWeight: 650 }}>
+        {label}
+      </Typography>
+      <Typography
+        sx={{
+          mt: 0.35,
+          color: "#4B4E51",
+          fontSize: 14,
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {value}
+      </Typography>
+    </Box>
+  );
+}
+
+function ReceiptDocumentPreview({ receipt }: { receipt: ReceiptRecord }) {
+  return (
+    <Box
+      role="img"
+      aria-label={`Vista previa del comprobante ${receipt.id}, documento de demostración`}
+      sx={{
+        display: "grid",
+        minHeight: { xs: 420, md: 560 },
+        placeItems: "center",
+        overflow: "hidden",
+        p: { xs: 2, sm: 3 },
+        backgroundColor: "#35393C",
+      }}
+    >
+      <Box
+        sx={{
+          width: "min(78%, 310px)",
+          minHeight: 500,
+          p: 2.5,
+          color: "#4B4E51",
+          backgroundColor: "#FBFAF2",
+          boxShadow: "8px 12px 24px rgba(0,0,0,.28)",
+          transform: "rotate(-1.25deg)",
+        }}
+      >
+        <Typography sx={{ textAlign: "center", fontSize: 11, fontWeight: 800 }}>
+          COMECORE TELECOMUNICACIONES
+        </Typography>
+        <Typography sx={{ mt: 0.4, textAlign: "center", fontSize: 8.5 }}>
+          Comprobante digital de demostración
+        </Typography>
+        <Divider sx={{ my: 1.5, borderStyle: "dashed" }} />
+        {[
+          ["Comprobante", `#${receipt.id}`],
+          ["Factura", `#${receipt.invoiceNumber}`],
+          ["Cliente", receipt.client],
+          ["Emitido", receipt.invoiceIssuedAt],
+          ["Canal", receipt.source],
+        ].map(([label, value]) => (
+          <Box
+            key={label}
+            sx={{ display: "flex", justifyContent: "space-between", gap: 1, py: 0.55 }}
+          >
+            <Typography sx={{ fontSize: 8.5, fontWeight: 700 }}>{label}</Typography>
+            <Typography sx={{ maxWidth: "62%", fontSize: 8.5, textAlign: "right" }}>
+              {value}
+            </Typography>
+          </Box>
+        ))}
+        <Divider sx={{ my: 1.5, borderStyle: "dashed" }} />
+        <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
+          <Typography sx={{ fontSize: 11, fontWeight: 800 }}>TOTAL</Typography>
+          <Typography sx={{ fontSize: 12, fontWeight: 800 }}>
+            {currency.format(receipt.invoiceTotal)}
+          </Typography>
+        </Box>
+        <Typography sx={{ mt: 2.5, textAlign: "center", fontSize: 8.5 }}>
+          Este documento no representa una operación fiscal real.
+        </Typography>
+        <Box
+          sx={{
+            width: "84%",
+            height: 46,
+            mx: "auto",
+            mt: 3,
+            backgroundImage:
+              "repeating-linear-gradient(90deg,#4B4E51 0 2px,transparent 2px 4px,#4B4E51 4px 5px,transparent 5px 8px)",
+          }}
+        />
+        <Typography sx={{ mt: 0.5, textAlign: "center", fontSize: 8 }}>
+          {String(receipt.id).padStart(12, "0")}
+        </Typography>
+      </Box>
+    </Box>
+  );
+}
+
+function ReceiptDetailView({ receipt }: { receipt: ReceiptRecord }) {
+  return (
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: { xs: "1fr", md: "minmax(300px,.92fr) minmax(0,1.08fr)" },
+        minHeight: 560,
+      }}
+    >
+      <ReceiptDocumentPreview receipt={receipt} />
+      <Box sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: { xs: "flex-start", sm: "center" },
+            justifyContent: "space-between",
+            gap: 1.5,
+            flexDirection: { xs: "column", sm: "row" },
+          }}
+        >
+          <Typography sx={{ color: "#4B4E51", fontSize: 16, fontWeight: 700 }}>
+            {receipt.accountCode} {receipt.client}
+          </Typography>
+          <Button
+            size="small"
+            variant="contained"
+            onClick={() =>
+              document
+                .getElementById("receipt-payment-history")
+                ?.scrollIntoView({ behavior: "smooth", block: "center" })
+            }
+            sx={{ boxShadow: "none" }}
+          >
+            Ver movimientos de facturación
+          </Button>
+        </Box>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "repeat(3, minmax(0,1fr))" },
+            gap: 2,
+            py: 2.5,
+            borderBottom: "1px solid #E7EAEC",
+          }}
+        >
+          <ReceiptMetric label="Balance C/C" value={currency.format(receipt.balance)} />
+          <ReceiptMetric
+            label="Crédito disponible"
+            value={currency.format(receipt.availableCredit)}
+          />
+          <ReceiptMetric
+            label="Facturas impagas"
+            value={currency.format(receipt.unpaidInvoices)}
+          />
+        </Box>
+        <Box sx={{ py: 2.5, borderBottom: "1px solid #E7EAEC" }}>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+            <Typography sx={{ color: "#4B4E51", fontSize: 15, fontWeight: 700 }}>
+              Factura
+            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <PictureAsPdfOutlinedIcon sx={{ color: "#676A6C", fontSize: 18 }} />
+              <StatusChip status={receipt.invoiceStatus} />
+            </Box>
+          </Box>
+          <Typography sx={{ mt: 0.25, color: "#8A8C8E", fontSize: 10.5 }}>
+            Comprobante #{receipt.invoiceNumber} · información de demostración
+          </Typography>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "repeat(3, minmax(0,1fr))" },
+              gap: 2,
+              mt: 2,
+            }}
+          >
+            <ReceiptMetric label="Total adeudado" value={currency.format(receipt.amountDue)} />
+            <ReceiptMetric label="Monto total" value={currency.format(receipt.invoiceTotal)} />
+            <ReceiptMetric label="Emitido el" value={receipt.invoiceIssuedAt} />
+          </Box>
+        </Box>
+        <Box id="receipt-payment-history" sx={{ pt: 2.5 }}>
+          <Typography sx={{ color: "#4B4E51", fontSize: 15, fontWeight: 700 }}>
+            Pagos de la factura
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              minHeight: 112,
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1,
+              mt: 1.5,
+              px: 2,
+              color: "#676A6C",
+              backgroundColor: "#F3F4F5",
+              textAlign: "center",
+            }}
+          >
+            <WarningAmberRoundedIcon sx={{ color: "#8A8C8E", fontSize: 28 }} />
+            <Typography sx={{ fontSize: 15, fontWeight: 650 }}>
+              No hay pagos para mostrar
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
 function PreviewDialog({
   preview,
   onClose,
@@ -3380,20 +3823,36 @@ function PreviewDialog({
   preview: PreviewState;
   onClose: () => void;
 }) {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const receipt = preview?.kind === "receipt" ? preview.receipt : undefined;
+
   return (
-    <Dialog open={Boolean(preview)} onClose={onClose} fullWidth maxWidth="md">
+    <Dialog
+      open={Boolean(preview)}
+      onClose={onClose}
+      fullWidth
+      fullScreen={fullScreen}
+      maxWidth={receipt ? "lg" : "md"}
+    >
       <DialogTitle
         sx={{
           display: "flex",
+          minHeight: 58,
           alignItems: "center",
           justifyContent: "space-between",
+          gap: 2,
+          borderBottom: "1px solid #E7EAEC",
         }}
       >
-        <Box>
-          <Typography sx={{ fontSize: 18, fontWeight: 700 }}>
-            {preview?.title}
-          </Typography>
-          {preview?.subtitle && (
+        <Box sx={{ minWidth: 0 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+            <Typography sx={{ fontSize: 18, fontWeight: 700 }}>
+              {preview?.title}
+            </Typography>
+            {receipt && <StatusChip status={receipt.status} />}
+          </Box>
+          {preview?.subtitle && !receipt && (
             <Typography sx={{ mt: 0.3, color: "#8A8C8E", fontSize: 11.5 }}>
               {preview.subtitle}
             </Typography>
@@ -3403,88 +3862,88 @@ function PreviewDialog({
           <CloseRoundedIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ backgroundColor: "#F5F6F7", py: 3 }}>
-        <Box
-          sx={{
-            width: "min(100%,650px)",
-            minHeight: 440,
-            mx: "auto",
-            p: { xs: 2, sm: 4 },
-            backgroundColor: "#FFF",
-            boxShadow: "0 5px 24px rgba(0,0,0,.14)",
-          }}
-        >
+      <DialogContent
+        sx={
+          receipt
+            ? { p: "0 !important", backgroundColor: "#FFFFFF" }
+            : { backgroundColor: "#F5F6F7", py: 3 }
+        }
+      >
+        {receipt ? (
+          <ReceiptDetailView receipt={receipt} />
+        ) : (
           <Box
             sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 2,
-              pb: 2,
-              borderBottom: "2px solid #1C84C6",
+              width: "min(100%,650px)",
+              minHeight: 440,
+              mx: "auto",
+              p: { xs: 2, sm: 4 },
+              backgroundColor: "#FFF",
+              boxShadow: "0 5px 24px rgba(0,0,0,.14)",
             }}
           >
-            <Box>
-              <Typography
-                sx={{ color: "#1C84C6", fontSize: 22, fontWeight: 800 }}
-              >
-                COMECORE
-              </Typography>
-              <Typography sx={{ color: "#676A6C", fontSize: 10.5 }}>
-                Controla · Conecta · Crece
-              </Typography>
-            </Box>
-            <Typography
-              sx={{ color: "#4B4E51", fontSize: 16, fontWeight: 700 }}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 2,
+                pb: 2,
+                borderBottom: "2px solid #1C84C6",
+              }}
             >
-              {preview?.kind === "audit" ? "ARQUEO DE CAJA" : "COMPROBANTE"}
-            </Typography>
-          </Box>
-          <Box sx={{ mt: 3 }}>
-            {preview?.lines?.map((line) => (
-              <Box
-                key={line.label}
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "minmax(120px,.7fr) 1fr",
-                  gap: 2,
-                  py: 1,
-                  borderBottom: "1px solid #ECEEEF",
-                }}
-              >
-                <Typography
-                  sx={{ color: "#676A6C", fontSize: 12, fontWeight: 650 }}
-                >
-                  {line.label}
+              <Box>
+                <Typography sx={{ color: "#1C84C6", fontSize: 22, fontWeight: 800 }}>
+                  COMECORE
                 </Typography>
-                <Typography
-                  sx={{
-                    color: "#4B4E51",
-                    fontSize: 12,
-                    textAlign: "right",
-                    overflowWrap: "anywhere",
-                  }}
-                >
-                  {line.value}
+                <Typography sx={{ color: "#676A6C", fontSize: 10.5 }}>
+                  Controla · Conecta · Crece
                 </Typography>
               </Box>
-            ))}
+              <Typography sx={{ color: "#4B4E51", fontSize: 16, fontWeight: 700 }}>
+                {preview?.kind === "audit" ? "ARQUEO DE CAJA" : "COMPROBANTE"}
+              </Typography>
+            </Box>
+            <Box sx={{ mt: 3 }}>
+              {preview?.lines?.map((line) => (
+                <Box
+                  key={line.label}
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "minmax(120px,.7fr) 1fr",
+                    gap: 2,
+                    py: 1,
+                    borderBottom: "1px solid #ECEEEF",
+                  }}
+                >
+                  <Typography sx={{ color: "#676A6C", fontSize: 12, fontWeight: 650 }}>
+                    {line.label}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: "#4B4E51",
+                      fontSize: 12,
+                      textAlign: "right",
+                      overflowWrap: "anywhere",
+                    }}
+                  >
+                    {line.value}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+            <Box sx={{ mt: 5, p: 2, backgroundColor: "#F7F8F9" }}>
+              <Typography sx={{ color: "#676A6C", fontSize: 11 }}>
+                Documento de demostración. No representa una operación fiscal ni financiera real.
+              </Typography>
+            </Box>
           </Box>
-          <Box sx={{ mt: 5, p: 2, backgroundColor: "#F7F8F9" }}>
-            <Typography sx={{ color: "#676A6C", fontSize: 11 }}>
-              Documento de demostración. No representa una operación fiscal ni
-              financiera real.
-            </Typography>
-          </Box>
-        </Box>
+        )}
       </DialogContent>
-      <DialogActions>
-        <Button
-          startIcon={<PrintOutlinedIcon />}
-          onClick={() => window.print()}
-        >
+      <DialogActions sx={{ borderTop: "1px solid #E7EAEC" }}>
+        <Button startIcon={<PrintOutlinedIcon />} onClick={() => window.print()}>
           Imprimir
         </Button>
-        <Button variant="contained" onClick={onClose}>
+        <Button variant="contained" onClick={onClose} sx={{ boxShadow: "none" }}>
           Cerrar
         </Button>
       </DialogActions>
@@ -3505,7 +3964,7 @@ export function FacturacionModule() {
       if (billingViewItems.some((item) => item.value === hash))
         return hash as BillingView;
     }
-    return "borradores";
+    return "comprobantes";
   });
   const [drafts, setDrafts] = useState(draftInvoices);
   const [issued, setIssued] = useState(issuedInvoices);
@@ -3593,13 +4052,10 @@ export function FacturacionModule() {
   }
   function previewReceipt(record: ReceiptRecord) {
     setPreview({
-      title: `Comprobante #${record.id}`,
+      title: "Comprobante de Pago",
       subtitle: record.client,
-      lines: [
-        { label: "Cliente", value: record.client },
-        { label: "Estado", value: record.status },
-        { label: "Creado el", value: record.createdAt },
-      ],
+      kind: "receipt",
+      receipt: record,
     });
   }
   function previewAudit(record: CashAuditRecord) {

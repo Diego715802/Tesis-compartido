@@ -1,0 +1,82 @@
+'use strict';
+// Exercise the real BFF source with a mock upstream; full PostgreSQL/Better Auth
+// integration is tested separately. No account credentials are used here.
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const Module = require('node:module');
+const ts = require('typescript');
+const root = path.resolve(__dirname, '..');
+const originalLoader = Module._extensions['.ts'];
+Module._extensions['.ts'] = (module, filename) => {
+  const source = fs.readFileSync(filename, 'utf8');
+  const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true } }).outputText;
+  const originalRequire = module.require.bind(module);
+  module.require = (id) => id === 'server-only' ? {} : originalRequire(id.startsWith('@/') ? path.join(root, 'src', id.slice(2)) : id);
+  module._compile(compiled, filename);
+};
+process.env.AUTH_PUBLIC_ORIGIN = 'http://localhost:3000';
+process.env.COMECORE_BACKEND_URL = 'http://127.0.0.1:3001';
+process.env.AUTH_GATEWAY_SECRET = 'test-gateway-configuration-only';
+delete process.env.AUTH_TRUST_PROXY_HEADER;
+const { bridge } = require('../src/lib/auth/bridge.ts');
+const { POST: authRoute } = require('../src/app/api/auth/[...path]/route.ts');
+const { identityFromHeaders, permissionForPath } = require('../src/lib/auth/config.ts');
+let calls = [];
+let upstream = () => Response.json({ ok: true });
+const previousFetch = global.fetch;
+global.fetch = async (url, options) => { calls.push({ url, options }); return upstream(); };
+const origin = 'http://localhost:3000';
+function request(headers = {}, body = '{}') {
+  return new Request(`${origin}/api/auth/sign-in/email`, { method: 'POST', headers: { origin, host: 'localhost:3000', 'content-type': 'application/json', ...headers }, body });
+}
+async function run() {
+  let result = await authRoute(request(), { params: Promise.resolve({ path: ['sign-up', 'email'] }) });
+  assert.equal(result.status, 404); assert.equal(calls.length, 0);
+  result = await authRoute(request(), { params: Promise.resolve({ path: ['two-factor', 'disable'] }) });
+  assert.equal(result.status, 404); assert.equal(calls.length, 0);
+  result = await authRoute(new Request(`${origin}/api/auth/sign-in/email?redirectTo=https://attacker.invalid`, { method: 'POST', headers: { origin, host: 'localhost:3000', 'content-type': 'application/json' }, body: '{}' }), { params: Promise.resolve({ path: ['sign-in', 'email'] }) });
+  assert.equal(result.status, 404); assert.equal(calls.length, 0);
+  result = await bridge(request({ host: '192.168.1.10:3000' }), '/api/auth/sign-in/email', 'POST');
+  assert.equal(result.status, 400); assert.equal(calls.length, 0);
+  result = await bridge(request({ origin: 'https://attacker.invalid' }), '/api/auth/sign-in/email', 'POST');
+  assert.equal(result.status, 403); assert.equal(calls.length, 0);
+  result = await bridge(request({ 'sec-fetch-site': 'cross-site' }), '/api/auth/sign-in/email', 'POST');
+  assert.equal(result.status, 403); assert.equal(calls.length, 0);
+  result = await bridge(request({ 'content-type': 'text/plain' }), '/api/auth/sign-in/email', 'POST');
+  assert.equal(result.status, 415); assert.equal(calls.length, 0);
+  result = await bridge(request({}, '[]'), '/api/auth/sign-in/email', 'POST');
+  assert.equal(result.status, 400); assert.equal(calls.length, 0);
+  result = await bridge(request({}, '{invalid'), '/api/auth/sign-in/email', 'POST');
+  assert.equal(result.status, 400); assert.equal(calls.length, 0);
+  result = await bridge(request({}, JSON.stringify({ huge: 'x'.repeat(17_000) })), '/api/auth/sign-in/email', 'POST');
+  assert.equal(result.status, 413); assert.equal(calls.length, 0);
+  upstream = () => new Response(JSON.stringify({ token: 'must-not-leave-upstream', session: { token: 'must-not-leave-upstream' }, sessionToken: 'must-not-leave-upstream', user: { id: 'user-id' } }), { headers: { 'content-type': 'application/json', 'set-cookie': 'session=opaque; HttpOnly; SameSite=Strict; Path=/' } });
+  result = await bridge(request({ cookie: 'session=opaque', authorization: 'untrusted', 'x-forwarded-for': 'untrusted', 'x-real-ip': '1.2.3.4', 'x-comecore-gateway': 'untrusted' }), '/api/auth/sign-in/email', 'POST');
+  assert.equal(result.status, 200);
+  assert.deepEqual(await result.json(), { user: { id: 'user-id' } });
+  assert.match(result.headers.get('set-cookie'), /HttpOnly/);
+  assert.equal(result.headers.get('cache-control'), 'private, no-store');
+  const forwarded = calls.at(-1).options.headers;
+  assert.equal(forwarded.get('cookie'), 'session=opaque');
+  assert.equal(forwarded.get('x-comecore-gateway'), process.env.AUTH_GATEWAY_SECRET);
+  for (const header of ['authorization', 'x-forwarded-for', 'x-real-ip']) assert.equal(forwarded.get(header), null);
+  upstream = () => new Response(null, { status: 302, headers: { location: 'https://attacker.invalid/' } });
+  result = await bridge(request(), '/api/auth/sign-in/email', 'POST');
+  assert.equal(result.status, 502); assert.equal(result.headers.get('location'), null);
+  upstream = () => new Response(JSON.stringify({ code: 'RATE_LIMITED' }), { status: 429, headers: { 'content-type': 'application/json', 'retry-after': '30' } });
+  result = await bridge(request(), '/api/auth/sign-in/email', 'POST');
+  assert.equal(result.status, 429); assert.equal(result.headers.get('retry-after'), '30');
+  upstream = () => { throw new Error('upstream internal details'); };
+  result = await bridge(request(), '/api/auth/sign-in/email', 'POST');
+  assert.equal(result.status, 503); assert.doesNotMatch(JSON.stringify(await result.json()), /internal details/);
+  upstream = () => Response.json({ user: { id: 'user-id', name: 'Nombre', email: 'staff@example.invalid', secret: 'never-return' }, organization: { id: 'org-id', name: 'Empresa' }, role: 'admin', permissions: ['dashboard:read', 1], mfaRequired: true, passwordChangeRequired: true, token: 'never-return' });
+  const context = await identityFromHeaders(new Headers({ cookie: 'session=opaque', host: 'localhost:3000' }));
+  assert.equal(context.status, 200); assert.equal(context.identity.passwordChangeRequired, true);
+  assert.deepEqual(context.identity.permissions, ['dashboard:read']);
+  assert.equal(context.identity.user.secret, undefined); assert.equal(context.identity.token, undefined);
+  for (const [route, permission] of [['/', 'dashboard:read'], ['/clientes', 'clientes:read'], ['/contratos', 'contratos:read'], ['/planes', 'planes:read'], ['/facturacion/pagos', 'facturacion:read'], ['/inventario', 'inventario:read'], ['/servidores', 'red:read'], ['/nodos', 'red:read']]) assert.equal(permissionForPath(route), permission);
+  assert.equal(permissionForPath('/clientes-ajenos'), undefined);
+  console.log('PASS: BFF rejects foreign origins, cross-site posts, invalid JSON and oversized bodies; forwards only allowed headers and HttpOnly cookies; strips session JSON; denies redirects; handles rate limiting/upstream failures; sanitizes identity and maps all ERP permissions.');
+}
+run().finally(() => { global.fetch = previousFetch; if (originalLoader) Module._extensions['.ts'] = originalLoader; else delete Module._extensions['.ts']; }).catch(error => { console.error(error); process.exitCode = 1; });

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Roboto } from "next/font/google";
 import { AppThemeProvider } from "@/components/providers/app-theme-provider";
 import "./globals.css";
@@ -21,13 +22,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export const dynamic = "force-dynamic";
+
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang="es" data-scroll-behavior="smooth" className={roboto.variable}>
       <body className={roboto.className}>
-        <AppThemeProvider>{children}</AppThemeProvider>
+        <AppThemeProvider nonce={nonce}>{children}</AppThemeProvider>
       </body>
     </html>
   );
